@@ -408,191 +408,224 @@ ul.clean li{padding:6px 0}
   </div>
 
 <script>
-// ===== Theme =====
-const root = document.getElementById('root');
-const THEME_KEY='oku_theme';
-function applyTheme(t){ root.className=t; localStorage.setItem(THEME_KEY,t); }
-applyTheme(localStorage.getItem(THEME_KEY)||'light');
-document.getElementById('theme').addEventListener('click',()=> applyTheme(root.className==='light'?'':'light'));
+document.addEventListener('DOMContentLoaded', () => {
+  // ===== util =====
+  const $ = (id) => document.getElementById(id);
+  const root = $('root');
+  const THEME_KEY = 'oku_theme';
+  const STATE_KEY = 'oku_kpi_v3';
 
-// ===== State =====
-const KEY='oku_kpi_v3';
-const state = JSON.parse(localStorage.getItem(KEY)||'{}');
-const defaults = { wt:71, wtTarget:77, sleep:7.0, sleepMin:7.0, water:2.5, waterCamp:3.0, gymPerWeek:4, sprintPerWeek:2 };
-Object.keys(defaults).forEach(k=>{ if(state[k]==null) state[k]=defaults[k]; });
-save();
-function save(){ localStorage.setItem(KEY, JSON.stringify(state)); render(); }
+  // ===== 参照の取得（先に全部） =====
+  const btnTheme = $('theme');
+  const btnReset = $('reset');
+  const btnEdit  = $('edit');
 
-// ===== Render =====
-function n1(x){ return Number(x).toFixed(1).replace(/\.0$/,''); }
-function render(){
-  wt.textContent = n1(state.wt); wtTarget.textContent = Number(state.wtTarget).toFixed(0);
-  sleep.textContent = Number(state.sleep).toFixed(1); sleepMin.textContent = Number(state.sleepMin).toFixed(1);
-  water.textContent = Number(state.water).toFixed(1); waterCamp.textContent = Number(state.waterCamp).toFixed(1);
-  wtInput.value = state.wt; slInput.value = state.sleep; waInput.value = state.water;
+  // KPI表示カード
+  const elWt = $('wt'), elWtTarget = $('wtTarget'), elWtInput = $('wtInput');
+  const elSleep = $('sleep'), elSleepMin = $('sleepMin'), elSlInput = $('slInput');
+  const elWater = $('water'), elWaterCamp = $('waterCamp'), elWaInput = $('waInput');
 
-  // modal fields
-  f_wt.value=state.wt; f_wtTarget.value=state.wtTarget;
-  f_sleep.value=state.sleep; f_sleepMin.value=state.sleepMin;
-  f_water.value=state.water; f_waterCamp.value=state.waterCamp;
-  f_gymPerWeek.value=state.gymPerWeek; f_sprintPerWeek.value=state.sprintPerWeek;
+  const btnWtMinus = $('wtMinus'), btnWtPlus = $('wtPlus');
+  const btnSlMinus = $('slMinus'), btnSlPlus = $('slPlus');
+  const btnWaMinus = $('waMinus'), btnWaPlus = $('waPlus');
 
-  // refresh weekly list with latest frequency
-  bindChecklist('todo-weekday','chk_weekday',[
-    `06:30 起床→水→日光→知識ノート15分`,
-    `出勤前：荷物チェック（PC/ボトル/プロテイン）`,
-    `12:30 散歩10分＋SNS 15分まで`,
-    `帰宅後：風呂掃除＋食器洗い（必須）`,
-    `ジム or スプリント（週${state.gymPerWeek}/${state.sprintPerWeek}）`,
-    `風呂→栄養→学習45分（技術/知識）`,
-    `23:00 ストレッチ / スマホ別室充電→23:30就寝（7h）`
-  ]);
-}
+  // モーダル（ボトムシート）
+  const modal = $('modal');
+  const btnClose = $('close');
+  const btnSave  = $('save');
+  const f_wt = $('f_wt'), f_wtTarget = $('f_wtTarget');
+  const f_sleep = $('f_sleep'), f_sleepMin = $('f_sleepMin');
+  const f_water = $('f_water'), f_waterCamp = $('f_waterCamp');
+  const f_gymPerWeek = $('f_gymPerWeek'), f_sprintPerWeek = $('f_sprintPerWeek');
 
-// ===== KPI quick controls =====
-function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
-wtMinus.onclick = ()=>{ state.wt=clamp(+state.wt-0.1,40,150); save(); };
-wtPlus.onclick  = ()=>{ state.wt=clamp(+state.wt+0.1,40,150); save(); };
-wtInput.onchange= ()=>{ state.wt=clamp(parseFloat(wtInput.value||state.wt),40,150); save(); };
+  // タブ
+  const tabs = [...document.querySelectorAll('.tab')];
+  const panes = [...document.querySelectorAll('.tabpane')];
 
-slMinus.onclick = ()=>{ state.sleep=clamp(+state.sleep-0.1,0,16); save(); };
-slPlus.onclick  = ()=>{ state.sleep=clamp(+state.sleep+0.1,0,16); save(); };
-slInput.onchange= ()=>{ state.sleep=clamp(parseFloat(slInput.value||state.sleep),0,16); save(); };
+  // クイックボタン
+  const quickGym = $('quickGym'), quickStudy = $('quickStudy'), quickHouse = $('quickHouse');
+  const fab = $('fab');
 
-waMinus.onclick = ()=>{ state.water=clamp(+state.water-0.1,0,10); save(); };
-waPlus.onclick  = ()=>{ state.water=clamp(+state.water+0.1,0,10); save(); };
-waInput.onchange= ()=>{ state.water=clamp(parseFloat(waInput.value||state.water),0,10); save(); };
+  // ===== テーマ =====
+  function applyTheme(t){ root.className = t; localStorage.setItem(THEME_KEY, t); }
+  applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+  btnTheme.addEventListener('click', () => applyTheme(root.className === 'light' ? '' : 'light'));
 
-// ===== Modal (bottom sheet) =====
-const modal=document.getElementById('modal');
-const sheet=modal.querySelector('.sheet');
-const openSheet=()=>{ modal.style.display='block'; sheet.style.transform='translateY(0)'; };
-const closeSheet=()=>{ modal.style.display='none'; };
-document.getElementById('edit').onclick=openSheet;
-document.getElementById('close').onclick=closeSheet;
-modal.addEventListener('click',e=>{ if(e.target===modal) closeSheet(); });
+  // ===== ステート =====
+  const defaults = { wt:71, wtTarget:77, sleep:7.0, sleepMin:7.0, water:2.5, waterCamp:3.0, gymPerWeek:4, sprintPerWeek:2 };
+  const state = Object.assign({}, defaults, JSON.parse(localStorage.getItem(STATE_KEY) || '{}'));
+  function save(){ localStorage.setItem(STATE_KEY, JSON.stringify(state)); render(); }
+  function n1(x){ return Number(x).toFixed(1).replace(/\.0$/,''); }
 
-const f_wt = document.getElementById('f_wt');
-const f_wtTarget = document.getElementById('f_wtTarget');
-const f_sleep = document.getElementById('f_sleep');
-const f_sleepMin = document.getElementById('f_sleepMin');
-const f_water = document.getElementById('f_water');
-const f_waterCamp = document.getElementById('f_waterCamp');
-const f_gymPerWeek = document.getElementById('f_gymPerWeek');
-const f_sprintPerWeek = document.getElementById('f_sprintPerWeek');
-
-document.getElementById('save').onclick=()=>{
-  state.wt=+f_wt.value||state.wt;
-  state.wtTarget=+f_wtTarget.value||state.wtTarget;
-  state.sleep=+f_sleep.value||state.sleep;
-  state.sleepMin=+f_sleepMin.value||state.sleepMin;
-  state.water=+f_water.value||state.water;
-  state.waterCamp=+f_waterCamp.value||state.waterCamp;
-  state.gymPerWeek=+f_gymPerWeek.value||state.gymPerWeek;
-  state.sprintPerWeek=+f_sprintPerWeek.value||state.sprintPerWeek;
-  save(); closeSheet();
-};
-
-// ===== Accordion =====
-document.querySelectorAll('.accordion .head').forEach(h=>{
-  h.addEventListener('click',()=>{
-    const id=h.dataset.acc;
-    const body=document.getElementById('acc-'+id);
-    const chev=document.getElementById('chev-'+id);
-    const open=body.style.display!=='none';
-    body.style.display=open?'none':'block';
-    chev.classList.toggle('rotate', !open);
-  });
-});
-// 初期は開いておく
-['road','pillars','week','train','know','life'].forEach(id=>{
-  document.getElementById('acc-'+id).style.display='block';
-});
-
-// ===== Tabs + swipe =====
-const tabs=[...document.querySelectorAll('.tab')];
-const panes=[...document.querySelectorAll('.tabpane')];
-function activateTab(id){
-  tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
-  panes.forEach(p=>p.classList.toggle('hidden', p.id!==id));
-}
-tabs.forEach(tab=> tab.addEventListener('click',()=> activateTab(tab.dataset.tab)));
-function swipeTabs(containerId){
-  const el=document.getElementById(containerId);
-  let x0=null;
-  el.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; },{passive:true});
-  el.addEventListener('touchmove',e=>{
-    if(x0==null) return;
-    const dx=e.touches[0].clientX-x0;
-    if(Math.abs(dx)>60){
-      const order=['mon','sat','sun'];
-      const cur=order.findIndex(id=> !document.getElementById(id).classList.contains('hidden'));
-      const next=dx<0?Math.min(cur+1,order.length-1):Math.max(cur-1,0);
-      activateTab(order[next]); x0=null;
-    }
-  },{passive:true});
-}
-['mon','sat','sun'].forEach(swipeTabs);
-
-// ===== Checklist (persist) =====
-function bindChecklist(container,key,items){
-  const el=document.getElementById(container);
-  const s=JSON.parse(localStorage.getItem(key)||'{}');
-  el.innerHTML='';
-  items.forEach((t,i)=>{
-    const id=key+'_'+i;
-    const wrap=document.createElement('div'); wrap.className='item';
-    const cb=document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.checked=!!s[id];
-    cb.addEventListener('change',()=>{ s[id]=cb.checked; localStorage.setItem(key,JSON.stringify(s)); });
-    const lab=document.createElement('label'); lab.className='label'; lab.setAttribute('for',id); lab.innerText=t;
-    wrap.appendChild(cb); wrap.appendChild(lab); el.appendChild(wrap);
-  });
-}
-document.getElementById('reset').addEventListener('click',()=>{
-  if(confirm('全チェックと設定を初期化しますか？')){
-    const theme=localStorage.getItem(THEME_KEY);
-    localStorage.clear(); if(theme) localStorage.setItem(THEME_KEY,theme);
-    location.reload();
+  // ===== チェックリスト（共通） =====
+  function bindChecklist(container,key,items){
+    const el = $(container);
+    const s = JSON.parse(localStorage.getItem(key)||'{}');
+    el.innerHTML = '';
+    items.forEach((t,i)=>{
+      const id = key+'_'+i;
+      const wrap = document.createElement('div'); wrap.className='item';
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.checked=!!s[id];
+      cb.addEventListener('change',()=>{ s[id]=cb.checked; localStorage.setItem(key,JSON.stringify(s)); });
+      const lab = document.createElement('label'); lab.className='label'; lab.setAttribute('for',id); lab.innerText=t;
+      wrap.appendChild(cb); wrap.appendChild(lab); el.appendChild(wrap);
+    });
   }
+  function weeklyItems(){
+    return [
+      'KPI入力：体重・睡眠平均・水分・スプリントTT',
+      '副業：B改善×2 / Cリリース×1',
+      '知識：1日1枚×7→金土クイズ10問',
+      '家事：デフォ毎日＋ローテ達成80%+',
+      '依存対策：○×カレンダー更新',
+      '次週の3タスク決定（最大3つ）'
+    ];
+  }
+  function bindWeekly(){ bindChecklist('todo-weekly','chk_weekly', weeklyItems()); }
+
+  // ===== レンダー（要素参照後なら安全） =====
+  function render(){
+    // KPI表示
+    elWt.textContent      = n1(state.wt);
+    elWtTarget.textContent= Number(state.wtTarget).toFixed(0);
+    elSleep.textContent   = Number(state.sleep).toFixed(1);
+    elSleepMin.textContent= Number(state.sleepMin).toFixed(1);
+    elWater.textContent   = Number(state.water).toFixed(1);
+    elWaterCamp.textContent= Number(state.waterCamp).toFixed(1);
+
+    // KPI入力欄
+    elWtInput.value = state.wt;
+    elSlInput.value = state.sleep;
+    elWaInput.value = state.water;
+
+    // モーダルフォーム
+    f_wt.value = state.wt; f_wtTarget.value = state.wtTarget;
+    f_sleep.value = state.sleep; f_sleepMin.value = state.sleepMin;
+    f_water.value = state.water; f_waterCamp.value = state.waterCamp;
+    f_gymPerWeek.value = state.gymPerWeek; f_sprintPerWeek.value = state.sprintPerWeek;
+
+    // 週間（平日）チェック
+    bindChecklist('todo-weekday','chk_weekday',[
+      '06:30 起床→水→日光→知識ノート15分',
+      '出勤前：荷物チェック（PC/ボトル/プロテイン）',
+      '12:30 散歩10分＋SNS 15分まで',
+      '帰宅後：風呂掃除＋食器洗い（必須）',
+      `ジム or スプリント（週${state.gymPerWeek}/${state.sprintPerWeek}）`,
+      '風呂→栄養→学習45分（技術/知識）',
+      '23:00 ストレッチ / スマホ別室充電→23:30就寝（7h）'
+    ]);
+
+    // 週次レビュー
+    bindWeekly();
+  }
+
+  // ===== KPIカード：±と直接入力 =====
+  function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+  btnWtMinus.addEventListener('click', ()=>{ state.wt = clamp(+state.wt-0.1, 40,150); save(); });
+  btnWtPlus .addEventListener('click', ()=>{ state.wt = clamp(+state.wt+0.1, 40,150); save(); });
+  elWtInput.addEventListener('change', ()=>{ state.wt = clamp(parseFloat(elWtInput.value||state.wt), 40,150); save(); });
+
+  btnSlMinus.addEventListener('click', ()=>{ state.sleep = clamp(+state.sleep-0.1, 0,16); save(); });
+  btnSlPlus .addEventListener('click', ()=>{ state.sleep = clamp(+state.sleep+0.1, 0,16); save(); });
+  elSlInput.addEventListener('change', ()=>{ state.sleep = clamp(parseFloat(elSlInput.value||state.sleep), 0,16); save(); });
+
+  btnWaMinus.addEventListener('click', ()=>{ state.water = clamp(+state.water-0.1, 0,10); save(); });
+  btnWaPlus .addEventListener('click', ()=>{ state.water = clamp(+state.water+0.1, 0,10); save(); });
+  elWaInput.addEventListener('change', ()=>{ state.water = clamp(parseFloat(elWaInput.value||state.water), 0,10); save(); });
+
+  // ===== モーダル =====
+  const openSheet  = () => { modal.style.display = 'block'; };
+  const closeSheet = () => { modal.style.display = 'none'; };
+  btnEdit.addEventListener('click', openSheet);
+  btnClose.addEventListener('click', closeSheet);
+  modal.addEventListener('click', (e)=>{ if(e.target===modal) closeSheet(); });
+  btnSave.addEventListener('click', ()=>{
+    state.wt = +f_wt.value || state.wt;
+    state.wtTarget = +f_wtTarget.value || state.wtTarget;
+    state.sleep = +f_sleep.value || state.sleep;
+    state.sleepMin = +f_sleepMin.value || state.sleepMin;
+    state.water = +f_water.value || state.water;
+    state.waterCamp = +f_waterCamp.value || state.waterCamp;
+    state.gymPerWeek = +f_gymPerWeek.value || state.gymPerWeek;
+    state.sprintPerWeek = +f_sprintPerWeek.value || state.sprintPerWeek;
+    save(); closeSheet();
+  });
+
+  // ===== アコーディオン =====
+  document.querySelectorAll('.accordion .head').forEach(head=>{
+    head.addEventListener('click', ()=>{
+      const id = head.dataset.acc;
+      const body = $('acc-'+id);
+      const chev = $('chev-'+id);
+      const open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : 'block';
+      chev.classList.toggle('rotate', !open);
+    });
+  });
+  ['road','pillars','week','train','know','life'].forEach(id=> $('acc-'+id).style.display='block');
+
+  // ===== タブ + スワイプ =====
+  function activateTab(id){
+    tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
+    panes.forEach(p=>p.classList.toggle('hidden', p.id!==id));
+  }
+  tabs.forEach(tab=> tab.addEventListener('click',()=> activateTab(tab.dataset.tab)));
+
+  function enableSwipeOn(id){
+    const el = $(id);
+    let x0=null;
+    el.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; },{passive:true});
+    el.addEventListener('touchmove',e=>{
+      if(x0==null) return;
+      const dx=e.touches[0].clientX-x0;
+      if(Math.abs(dx)>60){
+        const order=['mon','sat','sun'];
+        const cur = order.findIndex(pid=> !$(pid).classList.contains('hidden'));
+        const next = dx<0 ? Math.min(cur+1,order.length-1) : Math.max(cur-1,0);
+        activateTab(order[next]);
+        x0=null;
+      }
+    },{passive:true});
+  }
+  ['mon','sat','sun'].forEach(enableSwipeOn);
+
+  // ===== チェックリスト初期化（空→renderで上書き） =====
+  bindChecklist('todo-weekday','chk_weekday',[]);
+  bindChecklist('todo-sat','chk_sat',[
+    '10:00–12:00 ラグビー（〜13:00の場合あり）',
+    '補給：糖＋WPI / ストレッチ',
+    '補強（下半身/体幹）',
+    '部屋リセット60分',
+    '作り置き1品'
+  ]);
+  bindChecklist('todo-sun','chk_sun',[
+    '回復：軽い有酸素 or モビリティ',
+    '週次レビュー20分（KPI・予定更新）',
+    'デート/家族の時間',
+    '作り置き2品'
+  ]);
+  bindWeekly();
+
+  // ===== ボトムバー & FAB =====
+  quickGym.addEventListener('click', ()=> alert('ジム行ってらっしゃい💪（終わったらチェック）'));
+  quickStudy.addEventListener('click', ()=> alert('学習45分スタート📚'));
+  quickHouse.addEventListener('click', ()=> alert('家事達成お疲れ！🧽'));
+  fab.addEventListener('click', openSheet);
+
+  // ===== リセット =====
+  btnReset.addEventListener('click', ()=>{
+    if(confirm('全チェックと設定を初期化しますか？')){
+      const theme = localStorage.getItem(THEME_KEY);
+      localStorage.clear();
+      if(theme) localStorage.setItem(THEME_KEY, theme);
+      location.reload();
+    }
+  });
+
+  // ===== 最初の描画 =====
+  render();
 });
-bindChecklist('todo-weekday','chk_weekday',[]); // 実データは render() 内で設定
-bindChecklist('todo-sat','chk_sat',[
-  '10:00–12:00 ラグビー（〜13:00の場合あり）',
-  '補給：糖＋WPI / ストレッチ',
-  '補強（下半身/体幹）',
-  '部屋リセット60分',
-  '作り置き1品'
-]);
-bindChecklist('todo-sun','chk_sun',[
-  '回復：軽い有酸素 or モビリティ',
-  '週次レビュー20分（KPI・予定更新）',
-  'デート/家族の時間',
-  '作り置き2品'
-]);
-// 週次レビュー
-function weeklyItems(){
-  return [
-    'KPI入力：体重・睡眠平均・水分・スプリントTT',
-    '副業：B改善×2 / Cリリース×1',
-    '知識：1日1枚×7→金土クイズ10問',
-    '家事：デフォ毎日＋ローテ達成80%+',
-    '依存対策：○×カレンダー更新',
-    '次週の3タスク決定（最大3つ）'
-  ];
-}
-function bindWeekly(){ bindChecklist('todo-weekly','chk_weekly', weeklyItems()); }
-bindWeekly();
-
-// ===== Bottom bar actions =====
-quickGym.onclick   = ()=> alert('ジム、いこう💪（終わったらチェック）');
-quickStudy.onclick = ()=> alert('学習45分、スタート📚');
-quickHouse.onclick = ()=> alert('家事達成、お疲れ！🧽');
-
-// ===== FAB (今日の記録ショートカット) =====
-document.getElementById('fab').onclick = openSheet;
-
-// ===== Init =====
-render();
 </script>
+
 </body>
 </html>
