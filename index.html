@@ -1,449 +1,476 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>億プレーヤー化ダッシュボード｜日次システム基軸（Mobile+）</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>億プレーヤー化ダッシュボード｜Mobile Ultra</title>
 <style>
 :root{
   --bg:#0b0f1a; --panel:#0f172a; --ink:#e6edf3; --muted:#93a3b8; --line:#1f2a44;
-  --accent:#7dd3fc; --accent-2:#a78bfa; --ok:#34d399; --warn:#f59e0b; --danger:#f87171;
-  --shadow: 0 6px 24px rgba(2,6,23,.25), 0 2px 6px rgba(2,6,23,.2);
+  --accent:#38bdf8; --accent-2:#a78bfa; --ok:#34d399; --warn:#f59e0b; --danger:#f87171;
+  --shadow: 0 8px 24px rgba(2,6,23,.28), 0 2px 6px rgba(2,6,23,.25);
+  --radius:16px; --tap:48px; --space:14px; --space-lg:18px;
+  --fs: clamp(14px, 1.6vw, 16px); --fs-sm: clamp(12px,1.4vw,14px); --fs-lg: clamp(16px,2vw,18px);
 }
 .light{
   --bg:#f7f8fb; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e5e7eb;
-  --accent:#0ea5e9; --accent-2:#7c3aed; --ok:#10b981; --warn:#d97706; --danger:#ef4444;
-  --shadow: 0 6px 18px rgba(2,6,23,.08), 0 2px 6px rgba(2,6,23,.06);
+  --accent:#0ea5e9; --accent-2:#7c3aed; --shadow: 0 8px 18px rgba(2,6,23,.10), 0 2px 6px rgba(2,6,23,.08);
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0;background:radial-gradient(1200px 900px at 10% -10%, rgba(59,130,246,.08), transparent),
+  margin:0; background:radial-gradient(1200px 900px at 10% -10%, rgba(59,130,246,.08), transparent),
   radial-gradient(1000px 700px at 120% 20%, rgba(168,85,247,.08), transparent), var(--bg);
   color:var(--ink);
   font-family: "Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   -webkit-tap-highlight-color: transparent;
+  font-size: var(--fs); line-height: 1.6;
 }
-.app{display:grid;grid-template-rows:auto 1fr auto;min-height:100%}
+.app{min-height:100%; display:grid; grid-template-rows:auto 1fr auto}
 
 /* Header */
 header{
-  position:sticky;top:0;z-index:10;backdrop-filter: blur(10px);
+  position:sticky; top:0; z-index:20; backdrop-filter: blur(10px);
   background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
   border-bottom:1px solid var(--line);
-  display:flex;gap:.75rem;align-items:center;justify-content:space-between;padding:.6rem .9rem;
+  display:flex; align-items:center; gap:10px; padding:10px 12px;
 }
-.brand{display:flex;gap:.6rem;align-items:center}
+.brand{display:flex; gap:10px; align-items:center; min-width:0}
 .logo{width:28px;height:28px;border-radius:10px;background:conic-gradient(from 180deg, var(--accent), var(--accent-2));
   box-shadow:var(--shadow);border:1px solid var(--line)}
-.title{font-weight:800;letter-spacing:.2px;font-size:1rem}
-.tools{display:flex;gap:.5rem}
+.title{font-weight:800; letter-spacing:.2px; font-size: clamp(15px,2.6vw,18px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.tools{display:flex; gap:8px}
 .btn{
-  border:1px solid var(--line); background:var(--panel); color:var(--ink);
-  padding:.5rem .8rem; border-radius:.8rem; cursor:pointer; box-shadow:var(--shadow);
-  font-weight:700; font-size:.9rem;
+  min-height:var(--tap); padding:0 14px; border-radius:12px; border:1px solid var(--line);
+  background:var(--panel); color:var(--ink); font-weight:700; font-size:var(--fs);
+  cursor:pointer; box-shadow:var(--shadow);
 }
-.btn:active{transform: translateY(1px)}
-.iconbtn{padding:.45rem .6rem;border-radius:.7rem}
+.iconbtn{width:var(--tap); min-width:var(--tap); padding:0; text-align:center}
+.btn:active{transform:translateY(1px)}
 
-/* Top KPIs */
-.topline{display:grid; gap:1rem; grid-template-columns: repeat(12,1fr); padding:1rem;}
-.card{
-  grid-column: span 3;
+/* Sections as cards */
+.container{padding:12px}
+.card, .panel{
   background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)), var(--panel);
-  border:1px solid var(--line); border-radius:16px; padding:.9rem; box-shadow:var(--shadow);
+  border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+  padding: var(--space-lg);
+  margin-bottom: 12px;
 }
-.card.wide{grid-column: span 6}
-.card.full{grid-column: 1 / -1}
-.kpi{display:flex;gap:.6rem;align-items:center;justify-content:space-between}
-.kpi .num{font-size:2rem;font-weight:800;line-height:1}
-.kpi .unit{color:var(--muted);font-weight:700;margin-left:.25rem}
-.kpi-ctrl{display:flex;gap:.4rem}
-.kpi-ctrl button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.6rem;padding:.25rem .55rem;font-weight:800}
-.kpi-ctrl input{width:4.8rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.25rem .4rem;text-align:right}
 
-/* Chips & common */
-.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
-.chip{border:1px solid var(--line); color:var(--muted); padding:.2rem .6rem; border-radius:999px; font-size:.8rem}
-.badge{display:inline-block;padding:.2rem .6rem;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:.8rem}
-h3{margin:.2rem 0 .6rem 0}
-h2{margin:.2rem 0}
-.section{padding:1rem;display:grid;gap:1rem;grid-template-columns: repeat(12,1fr)}
-.panel{
-  grid-column: span 6;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1rem;box-shadow:var(--shadow)
+/* KPI row becomes stacked */
+.kpi-wrap{display:grid; gap:12px}
+.kpi{
+  display:flex; align-items:center; justify-content:space-between; gap:12px
 }
-.panel.full{grid-column: 1/-1}
-.panel h3{display:flex;align-items:center;justify-content:space-between;margin:.2rem 0 1rem}
-.muted{color:var(--muted)}
+.kpi .left{display:flex; flex-direction:column; gap:6px}
+.knum{font-size: clamp(28px,6.5vw,34px); font-weight:800; line-height:1}
+.kunit{color:var(--muted); font-weight:700; margin-left:6px; font-size:var(--fs-lg)}
+.kmuted{color:var(--muted); font-size:var(--fs-sm)}
+.kctrl{display:flex; gap:8px; align-items:center}
+.kctrl button{
+  min-width:44px; min-height:44px; border-radius:12px; font-size:18px; font-weight:800;
+  border:1px solid var(--line); background:var(--panel); color:var(--ink);
+}
+.kctrl input{
+  width:96px; min-height:44px; border-radius:12px; padding:0 10px; text-align:right;
+  border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:16px;
+  -moz-appearance: textfield;
+}
+.kctrl input::-webkit-outer-spin-button,
+.kctrl input::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
 
-/* timeline */
-.timeline{display:grid;gap:1rem}
-.milestone{display:flex;gap:.8rem;align-items:center;border-left:3px solid var(--line);padding-left:.8rem}
-.milestone .dot{width:.7rem;height:.7rem;border-radius:999px;background:var(--accent)}
+/* Chips */
+.chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+.chip{border:1px solid var(--line); color:var(--muted); padding:6px 10px; border-radius:999px; font-size:var(--fs-sm)}
+
+/* Accordion */
+.accordion .head{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:var(--tap); cursor:pointer}
+.accordion .head h3{margin:0; font-size:var(--fs-lg)}
+.accordion .body{margin-top:10px}
+.chev{width:28px;height:28px; border-radius:999px; display:grid; place-items:center; border:1px solid var(--line)}
+.rotate{transform:rotate(180deg)}
+
+/* Grid == 1col on mobile */
+.grid-2, .grid-3 {display:grid; gap:12px}
+.grid-2{grid-template-columns:1fr}
+.grid-3{grid-template-columns:1fr}
+@media (min-width: 900px){ .grid-2{grid-template-columns:1fr 1fr} .grid-3{grid-template-columns:repeat(3,1fr)} }
+
+.rule{border:1px dashed var(--line); border-radius:12px; padding:10px 12px}
+ul.clean{list-style:none; padding:0; margin:6px 0}
+ul.clean li{padding:6px 0}
+
+/* Timeline */
+.timeline{display:grid; gap:12px}
+.milestone{display:flex; gap:10px; align-items:center; border-left:3px solid var(--line); padding-left:10px}
+.milestone .dot{width:10px;height:10px;border-radius:999px;background:var(--accent)}
 .milestone .name{font-weight:700}
-.milestone .when{color:var(--muted);font-weight:700;margin-left:auto}
+.milestone .when{color:var(--muted); font-weight:700; margin-left:auto; font-size:var(--fs-sm)}
 
-/* grids */
-.grid-3{display:grid;gap:.8rem;grid-template-columns:repeat(3,1fr)}
-.grid-2{display:grid;gap:.8rem;grid-template-columns:repeat(2,1fr)}
-.row{display:flex;gap:.8rem;align-items:center}
-.rule{border:1px dashed var(--line);padding:.6rem .8rem;border-radius:12px}
-ul.clean{list-style:none;padding:0;margin:.4rem 0}
-ul.clean li{padding:.25rem 0}
-
-/* checklist */
-.todo{display:grid;gap:.5rem}
-.item{display:flex;gap:.6rem;align-items:flex-start;border:1px solid var(--line);padding:.6rem .7rem;border-radius:.8rem;background:var(--panel)}
-.item input{transform:translateY(2px);accent-color: var(--accent)}
+/* Checklist */
+.todo{display:grid; gap:10px}
+.item{display:flex; gap:10px; align-items:flex-start; border:1px solid var(--line); padding:12px; border-radius:12px; background:var(--panel)}
+.item input{transform:translateY(3px); width:22px; height:22px; accent-color:var(--accent)}
 .item .label{flex:1}
-.small{font-size:.9rem}
-hr.sep{border:none;border-top:1px solid var(--line);margin:.8rem 0}
-kbd{border:1px solid var(--line);padding:.1rem .4rem;border-radius:.4rem;background:rgba(255,255,255,.04)}
 
-/* tabs + swipe */
-.tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem}
-.tab{padding:.4rem .8rem;border:1px solid var(--line);border-radius:999px;cursor:pointer;color:var(--muted);background:var(--panel)}
-.tab.active{color:var(--ink);border-color:var(--accent)}
+/* Tabs + swipe */
+.tabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px}
+.tab{padding:8px 14px; border:1px solid var(--line); border-radius:999px; cursor:pointer; color:var(--muted); background:var(--panel); min-height:var(--tap); display:flex; align-items:center}
+.tab.active{color:var(--ink); border-color:var(--accent)}
 .hidden{display:none}
-.tabpane{touch-action: pan-y;}
+.tabpane{touch-action: pan-y}
 
-/* bottom bar for mobile quick access */
-.bottombar{
-  position:sticky;bottom:0;z-index:15;background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.1));
-  border-top:1px solid var(--line);display:flex;gap:.6rem;justify-content:space-between;padding:.55rem .8rem;backdrop-filter: blur(6px);
+/* Bottom bar */
+.bbar{
+  position:sticky; bottom:0; z-index:25; backdrop-filter: blur(8px);
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.10));
+  border-top:1px solid var(--line); display:flex; gap:8px; padding:8px; align-items:center; justify-content:space-between;
 }
-.bottombar .btn{flex:1;text-align:center}
+.bbar .btn{flex:1}
 
-/* responsive */
-@media (max-width: 1100px){ .card,.panel{grid-column: 1 / -1} }
-@media (max-width: 720px){
-  header{padding:.55rem .8rem}
-  .title{font-size:.95rem}
-  .topline{padding:.8rem;gap:.8rem}
-  .section{padding:.8rem;gap:.8rem}
-  .card,.panel{border-radius:14px}
-  .kpi .num{font-size:1.8rem}
-  .kpi-ctrl input{width:4.2rem}
-  .grid-3{grid-template-columns:1fr}
-  .grid-2{grid-template-columns:1fr}
-}
-@media (max-width: 400px){
-  .kpi .num{font-size:1.6rem}
-  .btn{font-size:.85rem}
+/* FAB */
+.fab{
+  position:fixed; right:16px; bottom:80px; z-index:30;
+  width:56px; height:56px; border-radius:16px; border:1px solid var(--line);
+  background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; font-weight:900; font-size:22px;
+  display:grid; place-items:center; box-shadow:var(--shadow); cursor:pointer;
 }
 
-/* print */
+/* Modal (bottom sheet on mobile) */
+#modal{position:fixed; inset:0; display:none; z-index:40; background:rgba(0,0,0,.45)}
+.sheet{
+  position:absolute; left:0; right:0; bottom:0; margin:auto;
+  width:min(720px,100%); max-height:92%; overflow:auto;
+  border-radius:18px 18px 0 0; border:1px solid var(--line); background:var(--panel); box-shadow:var(--shadow);
+  padding:14px;
+}
+.sheet h3{margin:0 0 10px}
+.row{display:flex; gap:10px; align-items:center}
+.input{
+  width:100%; min-height:44px; border:1px solid var(--line); background:var(--panel); color:var(--ink);
+  border-radius:12px; padding:10px; font-size:16px;
+}
+
+/* Desktop max width */
+@media (min-width: 1100px){
+  .container{max-width: 980px; margin: 0 auto}
+}
+
+/* Print */
 @media print{
-  header,.chips .chip.hide-print,.tools,.bottombar{display:none!important}
+  header, .bbar, .fab, #modal{display:none!important}
   body{background:#fff}
-  .panel,.card{box-shadow:none}
+  .card,.panel{box-shadow:none}
 }
 </style>
 </head>
 <body class="light" id="root">
-  <div class="app">
-    <header>
-      <div class="brand">
-        <div class="logo"></div>
-        <div class="title">億プレーヤー化ダッシュボード <span class="badge">2026年11月 世界大会ピーク</span></div>
-      </div>
-      <div class="tools">
-        <button class="btn iconbtn" id="theme">🌗</button>
-        <button class="btn iconbtn" onclick="window.print()">🖨</button>
-        <button class="btn iconbtn" id="reset" title="進捗リセット">↺</button>
-        <button class="btn" id="edit">✎ 編集</button>
-      </div>
-    </header>
+  <header>
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="title">億プレーヤー化ダッシュボード <span style="opacity:.7; font-weight:700">— 2026年11月ピーク</span></div>
+    </div>
+    <div class="tools">
+      <button class="btn iconbtn" id="theme" title="ダーク/ライト">🌗</button>
+      <button class="btn iconbtn" onclick="window.print()" title="印刷/PDF">🖨</button>
+      <button class="btn iconbtn" id="reset" title="進捗リセット">↺</button>
+      <button class="btn" id="edit">✎ 編集</button>
+    </div>
+  </header>
 
-    <!-- KPI row -->
-    <section class="topline">
-      <!-- 体重 -->
-      <div class="card">
+  <main class="container">
+    <!-- KPI -->
+    <section class="card">
+      <h3 style="margin:0 0 10px">KPI（タップで更新）</h3>
+      <div class="kpi-wrap">
+        <!-- 体重 -->
         <div class="kpi">
-          <div>
-            <span class="num" id="wt">71</span><span class="unit">kg</span>
-            <div class="muted small">現在体重（目標 <span id="wtTarget">77</span>kg）</div>
+          <div class="left">
+            <div><span class="knum" id="wt">71</span><span class="kunit">kg</span></div>
+            <div class="kmuted">現在体重（目標 <span id="wtTarget">77</span>kg）</div>
           </div>
-          <div class="kpi-ctrl">
+          <div class="kctrl">
             <button id="wtMinus">−</button>
-            <input id="wtInput" type="number" step="0.1" inputmode="decimal">
+            <input id="wtInput" type="number" step="0.1" inputmode="decimal" />
             <button id="wtPlus">＋</button>
           </div>
         </div>
-      </div>
-      <!-- 睡眠 -->
-      <div class="card">
+        <!-- 睡眠 -->
         <div class="kpi">
-          <div>
-            <span class="num" id="sleep">7.0</span><span class="unit">h</span>
-            <div class="muted small">平均睡眠（下限 <span id="sleepMin">7.0</span>h）</div>
+          <div class="left">
+            <div><span class="knum" id="sleep">7.0</span><span class="kunit">h</span></div>
+            <div class="kmuted">平均睡眠（下限 <span id="sleepMin">7.0</span>h）</div>
           </div>
-          <div class="kpi-ctrl">
+          <div class="kctrl">
             <button id="slMinus">−</button>
-            <input id="slInput" type="number" step="0.1" inputmode="decimal">
+            <input id="slInput" type="number" step="0.1" inputmode="decimal" />
             <button id="slPlus">＋</button>
           </div>
         </div>
-      </div>
-      <!-- 水分 -->
-      <div class="card">
+        <!-- 水分 -->
         <div class="kpi">
-          <div>
-            <span class="num" id="water">2.5</span><span class="unit">L</span>
-            <div class="muted small">水分（合宿時 <span id="waterCamp">3.0</span>L）</div>
+          <div class="left">
+            <div><span class="knum" id="water">2.5</span><span class="kunit">L</span></div>
+            <div class="kmuted">水分（合宿時 <span id="waterCamp">3.0</span>L）</div>
           </div>
-          <div class="kpi-ctrl">
+          <div class="kctrl">
             <button id="waMinus">−</button>
-            <input id="waInput" type="number" step="0.1" inputmode="decimal">
+            <input id="waInput" type="number" step="0.1" inputmode="decimal" />
             <button id="waPlus">＋</button>
           </div>
         </div>
       </div>
+      <div class="chips" style="margin-top:10px">
+        <span class="chip">風呂掃除＋食器洗い</span>
+        <span class="chip">ジム：A/B/C/D</span>
+        <span class="chip">知識スライド1枚→Anki5分</span>
+      </div>
+    </section>
 
-      <div class="card wide">
-        <h3>今日の3手</h3>
-        <div class="chips">
-          <span class="chip">風呂掃除＋食器洗い<small>（毎日デフォ）</small></span>
-          <span class="chip">ジム：A/B/C/Dのいずれか</span>
-          <span class="chip">知識スライド1枚→Anki5分</span>
-          <span class="chip hide-print">ヒント：<kbd>左右スワイプ</kbd>でタブ移動</span>
+    <!-- ロードマップ（アコーディオン） -->
+    <section class="panel accordion">
+      <div class="head" data-acc="road">
+        <h3>ロードマップ（2025/10 → 2026/11）</h3>
+        <div class="chev" id="chev-road">⌄</div>
+      </div>
+      <div class="body" id="acc-road">
+        <div class="timeline">
+          <div class="milestone"><span class="dot"></span><span class="name">フェーズA：土台（〜2026/01）</span><span class="when">睡眠/水分/家事/依存/基礎体力</span></div>
+          <div class="milestone"><span class="dot"></span><span class="name">フェーズB：小さく稼ぐ（〜2026/05）</span><span class="when">Bβ/C MVP/PC/会議運用</span></div>
+          <div class="milestone"><span class="dot"></span><span class="name">フェーズC：継続収入化（〜2026/09）</span><span class="when">3–10万/月・76kg台</span></div>
+          <div class="milestone"><span class="dot"></span><span class="name">フェーズD：仕上げ（〜2026/11）</span><span class="when">疲労管理/発信/ピーク</span></div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--line); margin:12px 0" />
+        <div class="grid-2">
+          <div class="rule"><b>土曜</b>：10–12(〜13) ラグビー → 補強 / 3連休＝合宿</div>
+          <div class="rule"><b>平日</b>：9–17:30勤務 → 家事 → 週4ジム or スプリント → 学習45分 → 23:30就寝</div>
         </div>
       </div>
     </section>
 
-    <!-- Roadmap & Schedule -->
-    <section class="section">
-      <div class="panel">
-        <h3>ロードマップ（2025/10 → 2026/11）<span class="muted small">長期の流れ</span></h3>
-        <div class="timeline">
-          <div class="milestone"><span class="dot"></span><span class="name">フェーズA：土台（〜2026/01）</span><span class="when">睡眠/水分/家事/依存対策/基礎体力</span></div>
-          <div class="milestone"><span class="dot"></span><span class="name">フェーズB：小さく稼ぐ（〜2026/05）</span><span class="when">B案β/C案MVP/PC購入/会議運用</span></div>
-          <div class="milestone"><span class="dot"></span><span class="name">フェーズC：継続収入化（〜2026/09）</span><span class="when">月3–10万帯/体重76kg台</span></div>
-          <div class="milestone"><span class="dot"></span><span class="name">フェーズD：仕上げ（〜2026/11）</span><span class="when">疲労管理/発信/世界大会ピーク</span></div>
-        </div>
-        <hr class="sep">
+    <!-- 4本柱（アコーディオン） -->
+    <section class="panel accordion">
+      <div class="head" data-acc="pillars">
+        <h3>4本柱（中核オペ）</h3>
+        <div class="chev" id="chev-pillars">⌄</div>
+      </div>
+      <div class="body" id="acc-pillars">
         <div class="grid-2">
-          <div class="rule">
-            <b>土曜</b>：10–12(〜13) ラグビー → 補強 / 3連休＝合宿（1日目可動域→2日目メイン→3日目調整）
-          </div>
-          <div class="rule">
-            <b>平日</b>：9–17:30勤務 → 家事 → 週4ジム or スプリント → 学習45分 → 23:30就寝
-          </div>
+          <div class="rule"><b>基盤</b><ul class="clean"><li>睡眠7h / 水2.5L / 家事（風呂＋食器）＋ローテ1つ</li></ul></div>
+          <div class="rule"><b>競技エンジン</b><ul class="clean"><li>週4ジム（A下半身重 / B上 / C補強 / D下中＋腹）＋週2スプリント</li></ul></div>
+          <div class="rule"><b>スキル・知識</b><ul class="clean"><li>技術45分/日（Git・Python・LLM・配布・課金）</li><li>知識15分×3（1日1枚→Anki）</li></ul></div>
+          <div class="rule"><b>レバレッジ</b><ul class="clean"><li>B：会議【要点/宿題/日程】→β課金</li><li>C：YouTube集中支援ツール</li></ul></div>
         </div>
       </div>
+    </section>
 
-      <div class="panel">
-        <h3>4本柱 <span class="muted small">日次システムの中核</span></h3>
-        <div class="grid-2">
-          <div class="rule"><b>基盤</b><br>睡眠7h / 水2.5L / 家事デフォ（風呂＋食器）＋ローテ1つ</div>
-          <div class="rule"><b>競技エンジン</b><br>週4ジム（A下半身重 / B上半身 / C補強 / D下半身中＋腹）＋週2スプリント</div>
-          <div class="rule"><b>スキル・知識エンジン</b><br>技術45分/日（Git・Python・LLM・配布・課金）/ 知識15分×3（1日1枚→Anki）</div>
-          <div class="rule"><b>レバレッジ</b><br>B案：会議【要点/宿題/日程】→β課金 / C案：YouTube学習化ツール</div>
-        </div>
+    <!-- 週間計画 -->
+    <section class="panel accordion">
+      <div class="head" data-acc="week">
+        <h3>週間計画（固定ルーティン）</h3>
+        <div class="chev" id="chev-week">⌄</div>
       </div>
-
-      <div class="panel full">
-        <h3>週間計画（固定ルーティン） <span class="muted small">チェックは保存</span></h3>
-        <div class="tabs">
-          <div class="tab active" data-tab="mon">月〜金</div>
-          <div class="tab" data-tab="sat">土曜</div>
-          <div class="tab" data-tab="sun">日曜</div>
+      <div class="body" id="acc-week">
+        <div class="tabs" role="tablist" aria-label="週間タブ">
+          <div class="tab active" data-tab="mon" role="tab" aria-selected="true">月〜金</div>
+          <div class="tab" data-tab="sat" role="tab" aria-selected="false">土曜</div>
+          <div class="tab" data-tab="sun" role="tab" aria-selected="false">日曜</div>
         </div>
-        <div id="mon" class="tabpane">
+        <div id="mon" class="tabpane" role="tabpanel">
           <div class="todo" id="todo-weekday"></div>
         </div>
-        <div id="sat" class="tabpane hidden">
+        <div id="sat" class="tabpane hidden" role="tabpanel">
           <div class="todo" id="todo-sat"></div>
         </div>
-        <div id="sun" class="tabpane hidden">
+        <div id="sun" class="tabpane hidden" role="tabpanel">
           <div class="todo" id="todo-sun"></div>
         </div>
       </div>
     </section>
 
-    <!-- Training & Product -->
-    <section class="section">
-      <div class="panel">
-        <h3>ジム & スプリント（週4＋週2）<span class="muted small">セブンス仕様</span></h3>
-        <div class="grid-2">
-          <div>
-            <h4>A：下半身重</h4>
-            <ul class="clean small"><li>SQ 6–8×3 / RDL 6–8×3 / ランジ / カーフ</li><li>体幹：ローラー 8–12×3 → 立ちコロ補助へ</li></ul>
-            <h4>B：上半身プレス</h4>
-            <ul class="clean small"><li>BP / ショルダープレス / ディップス</li><li>首アイソ（週2）</li></ul>
-          </div>
-          <div>
-            <h4>C：スプリント補強</h4>
-            <ul class="clean small"><li>プライオ・回旋・臀部＋ロー/懸垂</li></ul>
-            <h4>D：下半身中＋腹</h4>
-            <ul class="clean small"><li>片脚系・ヒンジ / ローラー・プランク</li></ul>
-            <hr class="sep">
-            <div class="small">スプリント：10m/30m/60m × 各3（完全レスト） × 週2</div>
-          </div>
-        </div>
+    <!-- トレーニング -->
+    <section class="panel accordion">
+      <div class="head" data-acc="train">
+        <h3>ジム & スプリント（週4＋週2）</h3>
+        <div class="chev" id="chev-train">⌄</div>
       </div>
-
-      <div class="panel">
-        <h3>プロダクト計画 <span class="muted small">配布優先：Web→拡張→Electron</span></h3>
+      <div class="body" id="acc-train">
         <div class="grid-2">
-          <div class="rule"><b>B案：会議3点抽出</b><br>MVP→Markdown出力 / β：保存・テンプレ・共有・Stripe課金（¥300–¥980/月）</div>
-          <div class="rule"><b>C案：YouTube集中支援</b><br>要約・タイムスタンプ・単語テスト / 月¥300 or ¥980買切</div>
-        </div>
-        <div class="chips" style="margin-top:.6rem">
-          <span class="chip">副業ルール：個人PC / 勤務外 / 機密NG</span>
-          <span class="chip">無料は回数制限 / 有料は保存・共有</span>
+          <div>
+            <div class="rule"><b>A：下半身重</b><ul class="clean"><li>SQ 6–8×3 / RDL 6–8×3 / ランジ / カーフ</li><li>体幹：ローラー 8–12×3 → 立ちコロ補助</li></ul></div>
+            <div class="rule"><b>B：上半身プレス</b><ul class="clean"><li>BP / ショルダープレス / ディップス</li><li>首アイソ（週2）</li></ul></div>
+          </div>
+          <div>
+            <div class="rule"><b>C：スプリント補強</b><ul class="clean"><li>プライオ・回旋・臀部＋ロー/懸垂</li></ul></div>
+            <div class="rule"><b>D：下半身中＋腹</b><ul class="clean"><li>片脚系・ヒンジ / ローラー・プランク</li></ul></div>
+            <div class="rule"><b>スプリント</b><ul class="clean"><li>10m/30m/60m × 各3（完全レスト） × 週2</li></ul></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Knowledge Curriculum -->
-    <section class="section">
-      <div class="panel full">
-        <h3>知識カリキュラム（毎日15分×3）<span class="muted small">1日1枚→Anki→金土10問</span></h3>
-        <div class="tabs">
+    <!-- 知識カリキュラム -->
+    <section class="panel accordion">
+      <div class="head" data-acc="know">
+        <h3>知識カリキュラム（毎日15分×3）</h3>
+        <div class="chev" id="chev-know">⌄</div>
+      </div>
+      <div class="body" id="acc-know">
+        <div class="tabs" role="tablist">
           <div class="tab active" data-tab="hist">歴史/政治/経済</div>
           <div class="tab" data-tab="sports">スポーツ/車/ファッション</div>
           <div class="tab" data-tab="life">酒/家とお金/旅行・会話</div>
         </div>
         <div id="hist" class="tabpane">
           <div class="grid-3">
-            <div class="rule"><b>歴史</b><ul class="clean small"><li>流れ：出来事→因→果→長期影響</li><li>産業革命→都市化→労働法→選挙制度</li></ul></div>
-            <div class="rule"><b>政治・制度</b><ul class="clean small"><li>三権分立 / 選挙 / 地方自治</li><li>税・社会保障の流れ</li></ul></div>
-            <div class="rule"><b>経済・投資</b><ul class="clean small"><li>金利・インフレ・為替</li><li>指数投資・複利・リバランス / FCF</li></ul></div>
+            <div class="rule"><b>歴史</b><ul class="clean"><li>出来事→因→果→長期影響</li><li>産業革命→都市化→労働法→選挙制度</li></ul></div>
+            <div class="rule"><b>政治・制度</b><ul class="clean"><li>三権分立 / 選挙 / 地方自治</li><li>税・社会保障の流れ</li></ul></div>
+            <div class="rule"><b>経済・投資</b><ul class="clean"><li>金利・インフレ・為替</li><li>指数投資・複利・リバランス / FCF</li></ul></div>
           </div>
         </div>
         <div id="sports" class="tabpane hidden">
           <div class="grid-3">
-            <div class="rule"><b>スポーツ</b><ul class="clean small"><li>大会/名所：花園＝東大阪市花園ラグビー場</li><li>反則・逆転パターンの言語化</li></ul></div>
-            <div class="rule"><b>車</b><ul class="clean small"><li>国産/海外の主要メーカー</li><li>ボディ型×価格帯→街で即答練習</li></ul></div>
-            <div class="rule"><b>ファッション</b><ul class="clean small"><li>渋クラ：ヘリテージ×ミニマル</li><li>再現コーデ週1体 / Pinterest週10ピン</li></ul></div>
+            <div class="rule"><b>スポーツ</b><ul class="clean"><li>大会/名所：花園＝東大阪市花園ラグビー場</li><li>反則・逆転パターンの言語化</li></ul></div>
+            <div class="rule"><b>車</b><ul class="clean"><li>主要メーカー</li><li>ボディ型×価格帯→街で即答練習</li></ul></div>
+            <div class="rule"><b>ファッション</b><ul class="clean"><li>渋クラ：ヘリテージ×ミニマル</li><li>再現コーデ週1 / Pinterest週10ピン</li></ul></div>
           </div>
         </div>
         <div id="life" class="tabpane hidden">
           <div class="grid-3">
-            <div class="rule"><b>酒</b><ul class="clean small"><li>製法：ビール/ウイスキー/日本酒</li><li>地図×代表銘柄×テイスティング語彙10</li></ul></div>
-            <div class="rule"><b>家とお金</b><ul class="clean small"><li>固定/変動費の設計・可視化</li><li>口座/クレカの最適化</li></ul></div>
-            <div class="rule"><b>旅行・会話</b><ul class="clean small"><li>持ち物テンプレ / 当日動線</li><li>事実→感情→要望 / 要約→感謝</li></ul></div>
+            <div class="rule"><b>酒</b><ul class="clean"><li>ビール/ウイスキー/日本酒の製法</li><li>代表銘柄×テイスティング語彙10</li></ul></div>
+            <div class="rule"><b>家とお金</b><ul class="clean"><li>固定/変動費の可視化</li><li>口座/クレカ最適化</li></ul></div>
+            <div class="rule"><b>旅行・会話</b><ul class="clean"><li>持ち物テンプレ / 当日動線</li><li>事実→感情→要望 / 要約→感謝</li></ul></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Living & Controls -->
-    <section class="section">
-      <div class="panel">
-        <h3>家事 & 依存対策</h3>
+    <!-- 家事 & 週次 -->
+    <section class="panel accordion">
+      <div class="head" data-acc="life">
+        <h3>家事 & 依存対策 / 週次レビュー</h3>
+        <div class="chev" id="chev-life">⌄</div>
+      </div>
+      <div class="body" id="acc-life">
         <div class="grid-2">
-          <div class="rule"><b>家事（デフォ：毎日）</b><ul class="clean small"><li>風呂掃除 / 食器洗い（必須）</li><li>＋ローテ1つ：月ゴミ/火床/水洗濯/木キッチン/金買い出し/土部屋/日作り置き</li></ul></div>
-          <div class="rule"><b>依存対策</b><ul class="clean small"><li>スマホは寝室外充電 / ベッドでスマホ禁止</li><li>SNS/YouTube：昼15分＋夜30分（タイマー）</li><li>置換30秒：水→スクワット10→アプリ終了→机</li></ul></div>
+          <div class="rule"><b>家事（デフォ毎日）</b><ul class="clean"><li>風呂掃除 / 食器洗い（必須）</li><li>＋ローテ1つ：月ゴミ/火床/水洗濯/木キッチン/金買い出し/土部屋/日作り置き</li></ul></div>
+          <div class="rule"><b>依存対策</b><ul class="clean"><li>スマホ寝室外 / ベッドでスマホ禁止</li><li>SNS/YouTube：昼15分＋夜30分（タイマー）</li><li>置換30秒：水→スクワット10→アプリ終了→机</li></ul></div>
+        </div>
+        <div class="rule" style="margin-top:12px">
+          <b>KPI & 週次レビュー（自動ToDo）</b>
+          <div class="todo" id="todo-weekly"></div>
         </div>
       </div>
-      <div class="panel">
-        <h3>KPI & 週次レビュー <span class="muted small">自動ToDo生成</span></h3>
-        <div class="todo" id="todo-weekly"></div>
-      </div>
     </section>
+  </main>
 
-    <!-- bottom quick actions (mobile-first) -->
-    <div class="bottombar">
-      <button class="btn" id="quickGym">🏋️ ジム</button>
-      <button class="btn" id="quickStudy">📚 学習45分</button>
-      <button class="btn" id="quickHouse">🧽 家事達成</button>
-    </div>
+  <!-- Bottom bar -->
+  <div class="bbar">
+    <button class="btn" id="quickGym">🏋️ ジム</button>
+    <button class="btn" id="quickStudy">📚 学習45分</button>
+    <button class="btn" id="quickHouse">🧽 家事達成</button>
   </div>
 
-<!-- 編集モーダル -->
-<div id="modal" style="position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.35);z-index:50;">
-  <div style="width:min(560px,92%);background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:1rem;">
-    <h3 style="margin:.2rem 0 1rem;display:flex;justify-content:space-between;align-items:center">
-      KPI編集 <span class="muted small">数値を保存するとダッシュボードに反映</span>
-    </h3>
-    <div class="grid-2" style="gap:.8rem">
-      <div class="rule">
-        <b>体重</b>
-        <div class="row"><label class="small">現在</label><input id="f_wt" type="number" step="0.1" inputmode="decimal" style="flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.4rem .6rem"></div>
-        <div class="row"><label class="small">目標</label><input id="f_wtTarget" type="number" step="0.1" inputmode="decimal" style="flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.4rem .6rem"></div>
+  <!-- FAB -->
+  <button class="fab" id="fab">＋</button>
+
+  <!-- Bottom sheet modal -->
+  <div id="modal">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="KPI編集">
+      <h3>KPI編集 <span style="color:var(--muted); font-size:var(--fs-sm)">保存すると即反映</span></h3>
+      <div class="grid-2" style="gap:12px">
+        <div class="rule">
+          <b>体重</b>
+          <div class="row"><label class="kmuted" style="min-width:96px">現在</label><input id="f_wt" class="input" type="number" step="0.1" inputmode="decimal"></div>
+          <div class="row"><label class="kmuted" style="min-width:96px">目標</label><input id="f_wtTarget" class="input" type="number" step="0.1" inputmode="decimal"></div>
+        </div>
+        <div class="rule">
+          <b>睡眠</b>
+          <div class="row"><label class="kmuted" style="min-width:96px">平均(h)</label><input id="f_sleep" class="input" type="number" step="0.1" inputmode="decimal"></div>
+          <div class="row"><label class="kmuted" style="min-width:96px">下限(h)</label><input id="f_sleepMin" class="input" type="number" step="0.1" inputmode="decimal"></div>
+        </div>
+        <div class="rule">
+          <b>水分</b>
+          <div class="row"><label class="kmuted" style="min-width:96px">現在(L)</label><input id="f_water" class="input" type="number" step="0.1" inputmode="decimal"></div>
+          <div class="row"><label class="kmuted" style="min-width:96px">合宿時(L)</label><input id="f_waterCamp" class="input" type="number" step="0.1" inputmode="decimal"></div>
+        </div>
+        <div class="rule">
+          <b>頻度設定</b>
+          <div class="row"><label class="kmuted" style="min-width:120px">週のジム</label><input id="f_gymPerWeek" class="input" type="number" step="1" inputmode="numeric"></div>
+          <div class="row"><label class="kmuted" style="min-width:120px">スプリント/週</label><input id="f_sprintPerWeek" class="input" type="number" step="1" inputmode="numeric"></div>
+        </div>
       </div>
-      <div class="rule">
-        <b>睡眠</b>
-        <div class="row"><label class="small">現在平均(h)</label><input id="f_sleep" type="number" step="0.1" inputmode="decimal" style="flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.4rem .6rem"></div>
-        <div class="row"><label class="small">下限(h)</label><input id="f_sleepMin" type="number" step="0.1" inputmode="decimal" style="flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.4rem .6rem"></div>
+      <div class="row" style="justify-content:flex-end; gap:10px; margin-top:12px">
+        <button class="btn iconbtn" id="close">✖</button>
+        <button class="btn" id="save">保存</button>
       </div>
-      <div class="rule">
-        <b>水分</b>
-        <div class="row"><label class="small">現在(L)</label><input id="f_water" type="number" step="0.1" inputmode="decimal" style="flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.4rem .6rem"></div>
-        <div class="row"><label class="small">合宿時(L)</label><input id="f_waterCamp" type="number" step="0.1" inputmode="decimal" style="flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.4rem .6rem"></div>
-      </div>
-      <div class="rule">
-        <b>頻度設定</b>
-        <div class="row"><label class="small">週のジム回数</label><input id="f_gymPerWeek" type="number" step="1" inputmode="numeric" style="flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.4rem .6rem"></div>
-        <div class="row"><label class="small">スプリント/週</label><input id="f_sprintPerWeek" type="number" step="1" inputmode="numeric" style="flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:.5rem;padding:.4rem .6rem"></div>
-      </div>
-    </div>
-    <div class="row" style="justify-content:flex-end;margin-top:1rem">
-      <button class="btn iconbtn" id="close">✖</button>
-      <button class="btn" id="save">保存</button>
     </div>
   </div>
-</div>
 
 <script>
-// ---------- テーマ ----------
+// ===== Theme =====
 const root = document.getElementById('root');
-const THEME_KEY = 'oku_theme';
-function applyTheme(t){ root.className = t; localStorage.setItem(THEME_KEY,t); }
-applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+const THEME_KEY='oku_theme';
+function applyTheme(t){ root.className=t; localStorage.setItem(THEME_KEY,t); }
+applyTheme(localStorage.getItem(THEME_KEY)||'light');
 document.getElementById('theme').addEventListener('click',()=> applyTheme(root.className==='light'?'':'light'));
 
-// ---------- ステート ----------
-const KEY = 'oku_kpi_v2';
-const state = JSON.parse(localStorage.getItem(KEY) || '{}');
+// ===== State =====
+const KEY='oku_kpi_v3';
+const state = JSON.parse(localStorage.getItem(KEY)||'{}');
 const defaults = { wt:71, wtTarget:77, sleep:7.0, sleepMin:7.0, water:2.5, waterCamp:3.0, gymPerWeek:4, sprintPerWeek:2 };
 Object.keys(defaults).forEach(k=>{ if(state[k]==null) state[k]=defaults[k]; });
 save();
-
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); render(); }
+
+// ===== Render =====
+function n1(x){ return Number(x).toFixed(1).replace(/\.0$/,''); }
 function render(){
-  // KPI表示
-  document.getElementById('wt').textContent = Number(state.wt).toFixed(1).replace(/\.0$/,'');
-  document.getElementById('wtTarget').textContent = Number(state.wtTarget).toFixed(0);
-  document.getElementById('sleep').textContent = Number(state.sleep).toFixed(1);
-  document.getElementById('sleepMin').textContent = Number(state.sleepMin).toFixed(1);
-  document.getElementById('water').textContent = Number(state.water).toFixed(1);
-  document.getElementById('waterCamp').textContent = Number(state.waterCamp).toFixed(1);
+  wt.textContent = n1(state.wt); wtTarget.textContent = Number(state.wtTarget).toFixed(0);
+  sleep.textContent = Number(state.sleep).toFixed(1); sleepMin.textContent = Number(state.sleepMin).toFixed(1);
+  water.textContent = Number(state.water).toFixed(1); waterCamp.textContent = Number(state.waterCamp).toFixed(1);
+  wtInput.value = state.wt; slInput.value = state.sleep; waInput.value = state.water;
 
-  // 入力欄（KPIカード）
-  document.getElementById('wtInput').value = state.wt;
-  document.getElementById('slInput').value = state.sleep;
-  document.getElementById('waInput').value = state.water;
+  // modal fields
+  f_wt.value=state.wt; f_wtTarget.value=state.wtTarget;
+  f_sleep.value=state.sleep; f_sleepMin.value=state.sleepMin;
+  f_water.value=state.water; f_waterCamp.value=state.waterCamp;
+  f_gymPerWeek.value=state.gymPerWeek; f_sprintPerWeek.value=state.sprintPerWeek;
 
-  // モーダル入力
-  f_wt.value = state.wt; f_wtTarget.value = state.wtTarget;
-  f_sleep.value = state.sleep; f_sleepMin.value = state.sleepMin;
-  f_water.value = state.water; f_waterCamp.value = state.waterCamp;
-  f_gymPerWeek.value = state.gymPerWeek; f_sprintPerWeek.value = state.sprintPerWeek;
+  // refresh weekly list with latest frequency
+  bindChecklist('todo-weekday','chk_weekday',[
+    `06:30 起床→水→日光→知識ノート15分`,
+    `出勤前：荷物チェック（PC/ボトル/プロテイン）`,
+    `12:30 散歩10分＋SNS 15分まで`,
+    `帰宅後：風呂掃除＋食器洗い（必須）`,
+    `ジム or スプリント（週${state.gymPerWeek}/${state.sprintPerWeek}）`,
+    `風呂→栄養→学習45分（技術/知識）`,
+    `23:00 ストレッチ / スマホ別室充電→23:30就寝（7h）`
+  ]);
 }
 
-// ---------- KPIカード：±と直接入力 ----------
-function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
-wtMinus.onclick = ()=>{ state.wt = clamp((+state.wt - 0.1), 40, 150); save(); };
-wtPlus.onclick  = ()=>{ state.wt = clamp((+state.wt + 0.1), 40, 150); save(); };
-wtInput.onchange= ()=>{ state.wt = clamp(parseFloat(wtInput.value||state.wt), 40, 150); save(); };
+// ===== KPI quick controls =====
+function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
+wtMinus.onclick = ()=>{ state.wt=clamp(+state.wt-0.1,40,150); save(); };
+wtPlus.onclick  = ()=>{ state.wt=clamp(+state.wt+0.1,40,150); save(); };
+wtInput.onchange= ()=>{ state.wt=clamp(parseFloat(wtInput.value||state.wt),40,150); save(); };
 
-slMinus.onclick = ()=>{ state.sleep = clamp((+state.sleep - 0.1), 0, 16); save(); };
-slPlus.onclick  = ()=>{ state.sleep = clamp((+state.sleep + 0.1), 0, 16); save(); };
-slInput.onchange= ()=>{ state.sleep = clamp(parseFloat(slInput.value||state.sleep), 0, 16); save(); };
+slMinus.onclick = ()=>{ state.sleep=clamp(+state.sleep-0.1,0,16); save(); };
+slPlus.onclick  = ()=>{ state.sleep=clamp(+state.sleep+0.1,0,16); save(); };
+slInput.onchange= ()=>{ state.sleep=clamp(parseFloat(slInput.value||state.sleep),0,16); save(); };
 
-waMinus.onclick = ()=>{ state.water = clamp((+state.water - 0.1), 0, 10); save(); };
-waPlus.onclick  = ()=>{ state.water = clamp((+state.water + 0.1), 0, 10); save(); };
-waInput.onchange= ()=>{ state.water = clamp(parseFloat(waInput.value||state.water), 0, 10); save(); };
+waMinus.onclick = ()=>{ state.water=clamp(+state.water-0.1,0,10); save(); };
+waPlus.onclick  = ()=>{ state.water=clamp(+state.water+0.1,0,10); save(); };
+waInput.onchange= ()=>{ state.water=clamp(parseFloat(waInput.value||state.water),0,10); save(); };
 
-// ---------- 編集モーダル ----------
-const modal = document.getElementById('modal');
-const openModal = ()=> modal.style.display='grid';
-const closeModal = ()=> modal.style.display='none';
-document.getElementById('edit').onclick = openModal;
-document.getElementById('close').onclick = closeModal;
+// ===== Modal (bottom sheet) =====
+const modal=document.getElementById('modal');
+const sheet=modal.querySelector('.sheet');
+const openSheet=()=>{ modal.style.display='block'; sheet.style.transform='translateY(0)'; };
+const closeSheet=()=>{ modal.style.display='none'; };
+document.getElementById('edit').onclick=openSheet;
+document.getElementById('close').onclick=closeSheet;
+modal.addEventListener('click',e=>{ if(e.target===modal) closeSheet(); });
 
 const f_wt = document.getElementById('f_wt');
 const f_wtTarget = document.getElementById('f_wtTarget');
@@ -454,118 +481,117 @@ const f_waterCamp = document.getElementById('f_waterCamp');
 const f_gymPerWeek = document.getElementById('f_gymPerWeek');
 const f_sprintPerWeek = document.getElementById('f_sprintPerWeek');
 
-document.getElementById('save').onclick = ()=>{
-  state.wt = +f_wt.value || state.wt;
-  state.wtTarget = +f_wtTarget.value || state.wtTarget;
-  state.sleep = +f_sleep.value || state.sleep;
-  state.sleepMin = +f_sleepMin.value || state.sleepMin;
-  state.water = +f_water.value || state.water;
-  state.waterCamp = +f_waterCamp.value || state.waterCamp;
-  state.gymPerWeek = +f_gymPerWeek.value || state.gymPerWeek;
-  state.sprintPerWeek = +f_sprintPerWeek.value || state.sprintPerWeek;
-  save(); closeModal();
+document.getElementById('save').onclick=()=>{
+  state.wt=+f_wt.value||state.wt;
+  state.wtTarget=+f_wtTarget.value||state.wtTarget;
+  state.sleep=+f_sleep.value||state.sleep;
+  state.sleepMin=+f_sleepMin.value||state.sleepMin;
+  state.water=+f_water.value||state.water;
+  state.waterCamp=+f_waterCamp.value||state.waterCamp;
+  state.gymPerWeek=+f_gymPerWeek.value||state.gymPerWeek;
+  state.sprintPerWeek=+f_sprintPerWeek.value||state.sprintPerWeek;
+  save(); closeSheet();
 };
 
-// ---------- 進捗・タブ・スワイプ ----------
-function bindChecklist(container, key, items){
-  const el = document.getElementById(container);
-  const s = JSON.parse(localStorage.getItem(key)||'{}');
-  el.innerHTML = '';
+// ===== Accordion =====
+document.querySelectorAll('.accordion .head').forEach(h=>{
+  h.addEventListener('click',()=>{
+    const id=h.dataset.acc;
+    const body=document.getElementById('acc-'+id);
+    const chev=document.getElementById('chev-'+id);
+    const open=body.style.display!=='none';
+    body.style.display=open?'none':'block';
+    chev.classList.toggle('rotate', !open);
+  });
+});
+// 初期は開いておく
+['road','pillars','week','train','know','life'].forEach(id=>{
+  document.getElementById('acc-'+id).style.display='block';
+});
+
+// ===== Tabs + swipe =====
+const tabs=[...document.querySelectorAll('.tab')];
+const panes=[...document.querySelectorAll('.tabpane')];
+function activateTab(id){
+  tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
+  panes.forEach(p=>p.classList.toggle('hidden', p.id!==id));
+}
+tabs.forEach(tab=> tab.addEventListener('click',()=> activateTab(tab.dataset.tab)));
+function swipeTabs(containerId){
+  const el=document.getElementById(containerId);
+  let x0=null;
+  el.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; },{passive:true});
+  el.addEventListener('touchmove',e=>{
+    if(x0==null) return;
+    const dx=e.touches[0].clientX-x0;
+    if(Math.abs(dx)>60){
+      const order=['mon','sat','sun'];
+      const cur=order.findIndex(id=> !document.getElementById(id).classList.contains('hidden'));
+      const next=dx<0?Math.min(cur+1,order.length-1):Math.max(cur-1,0);
+      activateTab(order[next]); x0=null;
+    }
+  },{passive:true});
+}
+['mon','sat','sun'].forEach(swipeTabs);
+
+// ===== Checklist (persist) =====
+function bindChecklist(container,key,items){
+  const el=document.getElementById(container);
+  const s=JSON.parse(localStorage.getItem(key)||'{}');
+  el.innerHTML='';
   items.forEach((t,i)=>{
-    const id = key+'_'+i;
-    const wrap = document.createElement('div'); wrap.className='item';
-    const cb = document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.checked=!!s[id];
+    const id=key+'_'+i;
+    const wrap=document.createElement('div'); wrap.className='item';
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.checked=!!s[id];
     cb.addEventListener('change',()=>{ s[id]=cb.checked; localStorage.setItem(key,JSON.stringify(s)); });
-    const lab = document.createElement('label'); lab.className='label'; lab.setAttribute('for',id); lab.innerText=t;
+    const lab=document.createElement('label'); lab.className='label'; lab.setAttribute('for',id); lab.innerText=t;
     wrap.appendChild(cb); wrap.appendChild(lab); el.appendChild(wrap);
   });
 }
 document.getElementById('reset').addEventListener('click',()=>{
   if(confirm('全チェックと設定を初期化しますか？')){
-    const theme = localStorage.getItem(THEME_KEY);
-    localStorage.clear();
-    if(theme) localStorage.setItem(THEME_KEY,theme);
+    const theme=localStorage.getItem(THEME_KEY);
+    localStorage.clear(); if(theme) localStorage.setItem(THEME_KEY,theme);
     location.reload();
   }
 });
-
-// タブ
-const tabs = [...document.querySelectorAll('.tab')];
-const panes = [...document.querySelectorAll('.tabpane')];
-tabs.forEach(tab=>{
-  tab.addEventListener('click',()=> activateTab(tab.dataset.tab));
-});
-function activateTab(id){
-  tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
-  panes.forEach(p=>p.classList.toggle('hidden', p.id!==id));
-}
-function swipeTabs(containerId){
-  const el = document.getElementById(containerId);
-  let x0=null;
-  el.addEventListener('touchstart',e=>{ x0 = e.touches[0].clientX; },{passive:true});
-  el.addEventListener('touchmove',e=>{
-    if(x0==null) return;
-    const dx = e.touches[0].clientX - x0;
-    if(Math.abs(dx)>60){
-      const order = ['mon','sat','sun'];
-      const cur = order.findIndex(id=>!document.getElementById(id).classList.contains('hidden'));
-      const next = dx<0 ? Math.min(cur+1, order.length-1) : Math.max(cur-1,0);
-      activateTab(order[next]);
-      x0=null;
-    }
-  },{passive:true});
-}
-swipeTabs('mon'); swipeTabs('sat'); swipeTabs('sun');
-
-// 週間チェック
-bindChecklist('todo-weekday','chk_weekday',[
-  '06:30 起床→水→日光→知識ノート15分',
-  '出勤前：荷物チェック（PC/ボトル/プロテイン）',
-  '12:30 散歩10分＋SNS 15分まで',
-  '帰宅後：風呂掃除＋食器洗い（必須）',
-  'ジム or スプリント（週'+state.gymPerWeek+'/'+state.sprintPerWeek+'）',
-  '風呂→栄養→学習45分（技術/知識）',
-  '23:00 ストレッチ / スマホ別室充電→23:30就寝（7h）'
-]);
+bindChecklist('todo-weekday','chk_weekday',[]); // 実データは render() 内で設定
 bindChecklist('todo-sat','chk_sat',[
   '10:00–12:00 ラグビー（〜13:00の場合あり）',
-  '補給：糖＋WPI、アイシング/ストレッチ',
+  '補給：糖＋WPI / ストレッチ',
   '補強（下半身/体幹）',
   '部屋リセット60分',
   '作り置き1品'
 ]);
 bindChecklist('todo-sun','chk_sun',[
   '回復：軽い有酸素 or モビリティ',
-  '週次レビュー20分（KPI・予定・荷物テンプレ更新）',
+  '週次レビュー20分（KPI・予定更新）',
   'デート/家族の時間',
   '作り置き2品'
 ]);
-
-// 週次レビュー（自動ToDo）
+// 週次レビュー
 function weeklyItems(){
   return [
     'KPI入力：体重・睡眠平均・水分・スプリントTT',
-    '副業進捗：B案の改善×2 / C案の1リリース',
+    '副業：B改善×2 / Cリリース×1',
     '知識：1日1枚×7→金土クイズ10問',
-    '家事：デフォ毎日＋ローテの達成率80%以上',
-    '依存対策：○×カレンダー更新（連続日数）',
-    '次週の3タスク決定（最大3つに絞る）'
+    '家事：デフォ毎日＋ローテ達成80%+',
+    '依存対策：○×カレンダー更新',
+    '次週の3タスク決定（最大3つ）'
   ];
 }
 function bindWeekly(){ bindChecklist('todo-weekly','chk_weekly', weeklyItems()); }
 bindWeekly();
 
-// クイックアクション（下部バー）
-document.getElementById('quickGym').onclick   = ()=> alert('「ジム」達成！チェックリストを更新してね💪');
-document.getElementById('quickStudy').onclick = ()=> alert('「学習45分」いってらっしゃい📚（終わったらチェック）');
-document.getElementById('quickHouse').onclick = ()=> alert('「家事」達成 ✅');
+// ===== Bottom bar actions =====
+quickGym.onclick   = ()=> alert('ジム、いこう💪（終わったらチェック）');
+quickStudy.onclick = ()=> alert('学習45分、スタート📚');
+quickHouse.onclick = ()=> alert('家事達成、お疲れ！🧽');
 
-window.addEventListener('keydown',(e)=>{
-  // 週次ToDo更新（Shift+R）
-  if(e.shiftKey && e.key.toLowerCase()==='r'){ bindWeekly(); alert('週次ToDoを更新しました'); }
-});
+// ===== FAB (今日の記録ショートカット) =====
+document.getElementById('fab').onclick = openSheet;
 
-// 初期レンダー
+// ===== Init =====
 render();
 </script>
 </body>
