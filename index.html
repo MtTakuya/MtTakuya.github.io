@@ -1,631 +1,510 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" class="h-full scroll-smooth">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>億プレーヤー化ダッシュボード｜Mobile Ultra</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>億プレーヤー化ダッシュボード｜Mobile Polished</title>
+
+<!-- Tailwind (Play CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          ink: { DEFAULT: '#0f172a' },
+          pane: { DEFAULT: '#0f172a' },
+          line: { DEFAULT: '#1f2a44' },
+          accent: { DEFAULT: '#38bdf8' },
+          accent2: { DEFAULT: '#a78bfa' },
+        },
+        boxShadow: {
+          soft: '0 10px 30px rgba(2,6,23,.18), 0 4px 10px rgba(2,6,23,.10)',
+          softDark: '0 10px 30px rgba(2,6,23,.35), 0 4px 10px rgba(2,6,23,.25)',
+        },
+        borderRadius: { xl2: '1.25rem' }
+      }
+    }
+  }
+</script>
+
+<!-- Alpine.js + persist plugin（状態保存） -->
+<script defer src="https://unpkg.com/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 <style>
-:root{
-  --bg:#0b0f1a; --panel:#0f172a; --ink:#e6edf3; --muted:#93a3b8; --line:#1f2a44;
-  --accent:#38bdf8; --accent-2:#a78bfa; --ok:#34d399; --warn:#f59e0b; --danger:#f87171;
-  --shadow: 0 8px 24px rgba(2,6,23,.28), 0 2px 6px rgba(2,6,23,.25);
-  --radius:16px; --tap:48px; --space:14px; --space-lg:18px;
-  --fs: clamp(14px, 1.6vw, 16px); --fs-sm: clamp(12px,1.4vw,14px); --fs-lg: clamp(16px,2vw,18px);
+/* 背景グラデ＋iOSセーフエリア余白 */
+.bg-grid {
+  background:
+    radial-gradient(1200px 900px at 10% -10%, rgba(59,130,246,.10), transparent),
+    radial-gradient(1000px 700px at 115% 20%, rgba(168,85,247,.10), transparent);
 }
-.light{
-  --bg:#f7f8fb; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e5e7eb;
-  --accent:#0ea5e9; --accent-2:#7c3aed; --shadow: 0 8px 18px rgba(2,6,23,.10), 0 2px 6px rgba(2,6,23,.08);
+@media (prefers-color-scheme: dark){
+  .bg-grid { background-color: #0b0f1a; }
 }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0; background:radial-gradient(1200px 900px at 10% -10%, rgba(59,130,246,.08), transparent),
-  radial-gradient(1000px 700px at 120% 20%, rgba(168,85,247,.08), transparent), var(--bg);
-  color:var(--ink);
-  font-family: "Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-tap-highlight-color: transparent;
-  font-size: var(--fs); line-height: 1.6;
+@media (prefers-color-scheme: light){
+  .bg-grid { background-color: #f7f8fb; }
 }
-.app{min-height:100%; display:grid; grid-template-rows:auto 1fr auto}
-
-/* Header */
-header{
-  position:sticky; top:0; z-index:20; backdrop-filter: blur(10px);
-  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-  border-bottom:1px solid var(--line);
-  display:flex; align-items:center; gap:10px; padding:10px 12px;
-}
-.brand{display:flex; gap:10px; align-items:center; min-width:0}
-.logo{width:28px;height:28px;border-radius:10px;background:conic-gradient(from 180deg, var(--accent), var(--accent-2));
-  box-shadow:var(--shadow);border:1px solid var(--line)}
-.title{font-weight:800; letter-spacing:.2px; font-size: clamp(15px,2.6vw,18px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.tools{display:flex; gap:8px}
-.btn{
-  min-height:var(--tap); padding:0 14px; border-radius:12px; border:1px solid var(--line);
-  background:var(--panel); color:var(--ink); font-weight:700; font-size:var(--fs);
-  cursor:pointer; box-shadow:var(--shadow);
-}
-.iconbtn{width:var(--tap); min-width:var(--tap); padding:0; text-align:center}
-.btn:active{transform:translateY(1px)}
-
-/* Sections as cards */
-.container{padding:12px}
-.card, .panel{
-  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)), var(--panel);
-  border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
-  padding: var(--space-lg);
-  margin-bottom: 12px;
-}
-
-/* KPI row becomes stacked */
-.kpi-wrap{display:grid; gap:12px}
-.kpi{
-  display:flex; align-items:center; justify-content:space-between; gap:12px
-}
-.kpi .left{display:flex; flex-direction:column; gap:6px}
-.knum{font-size: clamp(28px,6.5vw,34px); font-weight:800; line-height:1}
-.kunit{color:var(--muted); font-weight:700; margin-left:6px; font-size:var(--fs-lg)}
-.kmuted{color:var(--muted); font-size:var(--fs-sm)}
-.kctrl{display:flex; gap:8px; align-items:center}
-.kctrl button{
-  min-width:44px; min-height:44px; border-radius:12px; font-size:18px; font-weight:800;
-  border:1px solid var(--line); background:var(--panel); color:var(--ink);
-}
-.kctrl input{
-  width:96px; min-height:44px; border-radius:12px; padding:0 10px; text-align:right;
-  border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:16px;
-  -moz-appearance: textfield;
-}
-.kctrl input::-webkit-outer-spin-button,
-.kctrl input::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
-
-/* Chips */
-.chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
-.chip{border:1px solid var(--line); color:var(--muted); padding:6px 10px; border-radius:999px; font-size:var(--fs-sm)}
-
-/* Accordion */
-.accordion .head{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:var(--tap); cursor:pointer}
-.accordion .head h3{margin:0; font-size:var(--fs-lg)}
-.accordion .body{margin-top:10px}
-.chev{width:28px;height:28px; border-radius:999px; display:grid; place-items:center; border:1px solid var(--line)}
-.rotate{transform:rotate(180deg)}
-
-/* Grid == 1col on mobile */
-.grid-2, .grid-3 {display:grid; gap:12px}
-.grid-2{grid-template-columns:1fr}
-.grid-3{grid-template-columns:1fr}
-@media (min-width: 900px){ .grid-2{grid-template-columns:1fr 1fr} .grid-3{grid-template-columns:repeat(3,1fr)} }
-
-.rule{border:1px dashed var(--line); border-radius:12px; padding:10px 12px}
-ul.clean{list-style:none; padding:0; margin:6px 0}
-ul.clean li{padding:6px 0}
-
-/* Timeline */
-.timeline{display:grid; gap:12px}
-.milestone{display:flex; gap:10px; align-items:center; border-left:3px solid var(--line); padding-left:10px}
-.milestone .dot{width:10px;height:10px;border-radius:999px;background:var(--accent)}
-.milestone .name{font-weight:700}
-.milestone .when{color:var(--muted); font-weight:700; margin-left:auto; font-size:var(--fs-sm)}
-
-/* Checklist */
-.todo{display:grid; gap:10px}
-.item{display:flex; gap:10px; align-items:flex-start; border:1px solid var(--line); padding:12px; border-radius:12px; background:var(--panel)}
-.item input{transform:translateY(3px); width:22px; height:22px; accent-color:var(--accent)}
-.item .label{flex:1}
-
-/* Tabs + swipe */
-.tabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px}
-.tab{padding:8px 14px; border:1px solid var(--line); border-radius:999px; cursor:pointer; color:var(--muted); background:var(--panel); min-height:var(--tap); display:flex; align-items:center}
-.tab.active{color:var(--ink); border-color:var(--accent)}
-.hidden{display:none}
-.tabpane{touch-action: pan-y}
-
-/* Bottom bar */
-.bbar{
-  position:sticky; bottom:0; z-index:25; backdrop-filter: blur(8px);
-  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.10));
-  border-top:1px solid var(--line); display:flex; gap:8px; padding:8px; align-items:center; justify-content:space-between;
-}
-.bbar .btn{flex:1}
-
-/* FAB */
-.fab{
-  position:fixed; right:16px; bottom:80px; z-index:30;
-  width:56px; height:56px; border-radius:16px; border:1px solid var(--line);
-  background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1020; font-weight:900; font-size:22px;
-  display:grid; place-items:center; box-shadow:var(--shadow); cursor:pointer;
-}
-
-/* Modal (bottom sheet on mobile) */
-#modal{position:fixed; inset:0; display:none; z-index:40; background:rgba(0,0,0,.45)}
-.sheet{
-  position:absolute; left:0; right:0; bottom:0; margin:auto;
-  width:min(720px,100%); max-height:92%; overflow:auto;
-  border-radius:18px 18px 0 0; border:1px solid var(--line); background:var(--panel); box-shadow:var(--shadow);
-  padding:14px;
-}
-.sheet h3{margin:0 0 10px}
-.row{display:flex; gap:10px; align-items:center}
-.input{
-  width:100%; min-height:44px; border:1px solid var(--line); background:var(--panel); color:var(--ink);
-  border-radius:12px; padding:10px; font-size:16px;
-}
-
-/* Desktop max width */
-@media (min-width: 1100px){
-  .container{max-width: 980px; margin: 0 auto}
-}
-
-/* Print */
-@media print{
-  header, .bbar, .fab, #modal{display:none!important}
-  body{background:#fff}
-  .card,.panel{box-shadow:none}
-}
+.safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
+.safe-top { padding-top: max(env(safe-area-inset-top), 8px); }
 </style>
 </head>
-<body class="light" id="root">
-  <header>
-    <div class="brand">
-      <div class="logo"></div>
-      <div class="title">億プレーヤー化ダッシュボード <span style="opacity:.7; font-weight:700">— 2026年11月ピーク</span></div>
-    </div>
-    <div class="tools">
-      <button class="btn iconbtn" id="theme" title="ダーク/ライト">🌗</button>
-      <button class="btn iconbtn" onclick="window.print()" title="印刷/PDF">🖨</button>
-      <button class="btn iconbtn" id="reset" title="進捗リセット">↺</button>
-      <button class="btn" id="edit">✎ 編集</button>
+
+<body class="h-full antialiased bg-grid" x-data="app()" x-init="init()" :class="dark ? 'dark text-slate-100' : 'text-ink'">
+  <!-- Header -->
+  <header class="sticky top-0 z-30 backdrop-blur-md border-b border-white/10 bg-white/60 dark:bg-slate-900/50 safe-top">
+    <div class="max-w-screen-md mx-auto px-4 py-3 flex items-center gap-3 justify-between">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-8 h-8 rounded-xl border border-white/20 shadow-softDark dark:shadow-soft"
+             style="background: conic-gradient(from 180deg, #38bdf8, #a78bfa)"></div>
+        <div class="font-extrabold text-base sm:text-lg truncate">億プレーヤー化ダッシュボード
+          <span class="text-xs font-semibold opacity-70">— 2026年11月ピーク</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button @click="toggleDark()" class="h-10 w-10 grid place-items-center rounded-xl border border-white/20 bg-white/70 dark:bg-slate-800/80 shadow-softDark">
+          <span x-text="dark ? '🌙' : '🌞'"></span>
+        </button>
+        <button @click="openSheet()" class="px-3 h-10 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 font-bold shadow-softDark">✎ 編集</button>
+      </div>
     </div>
   </header>
 
-  <main class="container">
+  <!-- Main -->
+  <main class="max-w-screen-md mx-auto px-4 pb-28 pt-4 space-y-4">
     <!-- KPI -->
-    <section class="card">
-      <h3 style="margin:0 0 10px">KPI（タップで更新）</h3>
-      <div class="kpi-wrap">
+    <section class="rounded-xl2 border border-white/10 bg-white/60 dark:bg-slate-900/60 shadow-softDark p-4">
+      <h3 class="font-bold text-lg mb-2">KPI（タップで更新）</h3>
+      <div class="space-y-3">
         <!-- 体重 -->
-        <div class="kpi">
-          <div class="left">
-            <div><span class="knum" id="wt">71</span><span class="kunit">kg</span></div>
-            <div class="kmuted">現在体重（目標 <span id="wtTarget">77</span>kg）</div>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-end gap-2 leading-none">
+              <span class="text-3xl font-extrabold" x-text="fmt1(kpi.wt)"></span>
+              <span class="text-slate-500 dark:text-slate-400 font-bold">kg</span>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">現在体重（目標 <span x-text="Math.round(kpi.wtTarget)"></span>kg）</div>
           </div>
-          <div class="kctrl">
-            <button id="wtMinus">−</button>
-            <input id="wtInput" type="number" step="0.1" inputmode="decimal" />
-            <button id="wtPlus">＋</button>
+          <div class="flex items-center gap-2">
+            <button class="h-11 w-11 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 font-extrabold text-lg"
+                    @click="adj('wt', -0.1)">−</button>
+            <input type="number" step="0.1" inputmode="decimal" class="h-11 w-24 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3 text-right"
+                   :value="kpi.wt" @change="setNum('wt', $event.target.value)">
+            <button class="h-11 w-11 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 font-extrabold text-lg"
+                    @click="adj('wt', +0.1)">＋</button>
           </div>
         </div>
         <!-- 睡眠 -->
-        <div class="kpi">
-          <div class="left">
-            <div><span class="knum" id="sleep">7.0</span><span class="kunit">h</span></div>
-            <div class="kmuted">平均睡眠（下限 <span id="sleepMin">7.0</span>h）</div>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-end gap-2 leading-none">
+              <span class="text-3xl font-extrabold" x-text="kpi.sleep.toFixed(1)"></span>
+              <span class="text-slate-500 dark:text-slate-400 font-bold">h</span>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">平均睡眠（下限 <span x-text="kpi.sleepMin.toFixed(1)"></span>h）</div>
           </div>
-          <div class="kctrl">
-            <button id="slMinus">−</button>
-            <input id="slInput" type="number" step="0.1" inputmode="decimal" />
-            <button id="slPlus">＋</button>
+          <div class="flex items-center gap-2">
+            <button class="h-11 w-11 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 font-extrabold text-lg"
+                    @click="adj('sleep', -0.1)">−</button>
+            <input type="number" step="0.1" inputmode="decimal" class="h-11 w-24 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3 text-right"
+                   :value="kpi.sleep" @change="setNum('sleep', $event.target.value)">
+            <button class="h-11 w-11 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 font-extrabold text-lg"
+                    @click="adj('sleep', +0.1)">＋</button>
           </div>
         </div>
         <!-- 水分 -->
-        <div class="kpi">
-          <div class="left">
-            <div><span class="knum" id="water">2.5</span><span class="kunit">L</span></div>
-            <div class="kmuted">水分（合宿時 <span id="waterCamp">3.0</span>L）</div>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="flex items-end gap-2 leading-none">
+              <span class="text-3xl font-extrabold" x-text="kpi.water.toFixed(1)"></span>
+              <span class="text-slate-500 dark:text-slate-400 font-bold">L</span>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">水分（合宿時 <span x-text="kpi.waterCamp.toFixed(1)"></span>L）</div>
           </div>
-          <div class="kctrl">
-            <button id="waMinus">−</button>
-            <input id="waInput" type="number" step="0.1" inputmode="decimal" />
-            <button id="waPlus">＋</button>
+          <div class="flex items-center gap-2">
+            <button class="h-11 w-11 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 font-extrabold text-lg"
+                    @click="adj('water', -0.1)">−</button>
+            <input type="number" step="0.1" inputmode="decimal" class="h-11 w-24 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3 text-right"
+                   :value="kpi.water" @change="setNum('water', $event.target.value)">
+            <button class="h-11 w-11 rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 font-extrabold text-lg"
+                    @click="adj('water', +0.1)">＋</button>
           </div>
         </div>
       </div>
-      <div class="chips" style="margin-top:10px">
-        <span class="chip">風呂掃除＋食器洗い</span>
-        <span class="chip">ジム：A/B/C/D</span>
-        <span class="chip">知識スライド1枚→Anki5分</span>
+
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="px-3 py-1.5 rounded-full border border-white/20 text-sm text-slate-600 dark:text-slate-300">風呂掃除＋食器洗い</span>
+        <span class="px-3 py-1.5 rounded-full border border-white/20 text-sm text-slate-600 dark:text-slate-300">ジム：A/B/C/D</span>
+        <span class="px-3 py-1.5 rounded-full border border-white/20 text-sm text-slate-600 dark:text-slate-300">知識スライド1枚→Anki5分</span>
       </div>
     </section>
 
     <!-- ロードマップ（アコーディオン） -->
-    <section class="panel accordion">
-      <div class="head" data-acc="road">
-        <h3>ロードマップ（2025/10 → 2026/11）</h3>
-        <div class="chev" id="chev-road">⌄</div>
-      </div>
-      <div class="body" id="acc-road">
-        <div class="timeline">
-          <div class="milestone"><span class="dot"></span><span class="name">フェーズA：土台（〜2026/01）</span><span class="when">睡眠/水分/家事/依存/基礎体力</span></div>
-          <div class="milestone"><span class="dot"></span><span class="name">フェーズB：小さく稼ぐ（〜2026/05）</span><span class="when">Bβ/C MVP/PC/会議運用</span></div>
-          <div class="milestone"><span class="dot"></span><span class="name">フェーズC：継続収入化（〜2026/09）</span><span class="when">3–10万/月・76kg台</span></div>
-          <div class="milestone"><span class="dot"></span><span class="name">フェーズD：仕上げ（〜2026/11）</span><span class="when">疲労管理/発信/ピーク</span></div>
-        </div>
-        <hr style="border:none;border-top:1px solid var(--line); margin:12px 0" />
-        <div class="grid-2">
-          <div class="rule"><b>土曜</b>：10–12(〜13) ラグビー → 補強 / 3連休＝合宿</div>
-          <div class="rule"><b>平日</b>：9–17:30勤務 → 家事 → 週4ジム or スプリント → 学習45分 → 23:30就寝</div>
+    <section class="rounded-xl2 border border-white/10 bg-white/60 dark:bg-slate-900/60 shadow-softDark"
+             x-data="{open:true}">
+      <button class="w-full px-4 py-3 flex items-center justify-between" @click="open=!open">
+        <h3 class="font-bold text-lg">ロードマップ（2025/10→2026/11）</h3>
+        <div class="w-7 h-7 grid place-items-center rounded-lg border border-white/20"
+             :class="open ? 'rotate-180' : ''">⌄</div>
+      </button>
+      <div x-show="open" x-collapse>
+        <div class="px-4 pb-4 space-y-3">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 border-l-4 border-white/20 pl-3">
+              <div class="w-2 h-2 rounded-full bg-accent"></div>
+              <div class="font-semibold">A：土台（〜2026/01）</div>
+              <div class="ml-auto text-xs text-slate-500 dark:text-slate-400">睡眠/水分/家事/依存/基礎体力</div>
+            </div>
+            <div class="flex items-center gap-2 border-l-4 border-white/20 pl-3">
+              <div class="w-2 h-2 rounded-full bg-accent"></div>
+              <div class="font-semibold">B：小さく稼ぐ（〜2026/05）</div>
+              <div class="ml-auto text-xs text-slate-500 dark:text-slate-400">Bβ/C MVP/PC/会議運用</div>
+            </div>
+            <div class="flex items-center gap-2 border-l-4 border-white/20 pl-3">
+              <div class="w-2 h-2 rounded-full bg-accent"></div>
+              <div class="font-semibold">C：継続収入化（〜2026/09）</div>
+              <div class="ml-auto text-xs text-slate-500 dark:text-slate-400">3–10万/月・76kg台</div>
+            </div>
+            <div class="flex items-center gap-2 border-l-4 border-white/20 pl-3">
+              <div class="w-2 h-2 rounded-full bg-accent"></div>
+              <div class="font-semibold">D：仕上げ（〜2026/11）</div>
+              <div class="ml-auto text-xs text-slate-500 dark:text-slate-400">疲労管理/発信/ピーク</div>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div class="border border-white/20 rounded-xl p-3"> <b>土曜</b>：10–12(〜13) ラグビー → 補強 / 3連休＝合宿 </div>
+            <div class="border border-white/20 rounded-xl p-3"> <b>平日</b>：9–17:30勤務 → 家事 → 週4ジム/週2スプリント → 学習45分 → 23:30就寝 </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 4本柱（アコーディオン） -->
-    <section class="panel accordion">
-      <div class="head" data-acc="pillars">
-        <h3>4本柱（中核オペ）</h3>
-        <div class="chev" id="chev-pillars">⌄</div>
-      </div>
-      <div class="body" id="acc-pillars">
-        <div class="grid-2">
-          <div class="rule"><b>基盤</b><ul class="clean"><li>睡眠7h / 水2.5L / 家事（風呂＋食器）＋ローテ1つ</li></ul></div>
-          <div class="rule"><b>競技エンジン</b><ul class="clean"><li>週4ジム（A下半身重 / B上 / C補強 / D下中＋腹）＋週2スプリント</li></ul></div>
-          <div class="rule"><b>スキル・知識</b><ul class="clean"><li>技術45分/日（Git・Python・LLM・配布・課金）</li><li>知識15分×3（1日1枚→Anki）</li></ul></div>
-          <div class="rule"><b>レバレッジ</b><ul class="clean"><li>B：会議【要点/宿題/日程】→β課金</li><li>C：YouTube集中支援ツール</li></ul></div>
+    <!-- 4本柱 -->
+    <section class="rounded-xl2 border border-white/10 bg-white/60 dark:bg-slate-900/60 shadow-softDark"
+             x-data="{open:true}">
+      <button class="w-full px-4 py-3 flex items-center justify-between" @click="open=!open">
+        <h3 class="font-bold text-lg">4本柱（中核オペ）</h3>
+        <div class="w-7 h-7 grid place-items-center rounded-lg border border-white/20"
+             :class="open ? 'rotate-180' : ''">⌄</div>
+      </button>
+      <div x-show="open" x-collapse>
+        <div class="px-4 pb-4 grid sm:grid-cols-2 gap-3">
+          <div class="border border-white/20 rounded-xl p-3"><b>基盤</b><ul class="list-none pl-0 space-y-1 mt-1 text-sm opacity-90"><li>睡眠7h / 水2.5L / 家事（風呂＋食器）＋ローテ1つ</li></ul></div>
+          <div class="border border-white/20 rounded-xl p-3"><b>競技エンジン</b><ul class="space-y-1 mt-1 text-sm opacity-90"><li>週4ジム（A下重 / B上 / C補強 / D下中＋腹）＋週2スプリント</li></ul></div>
+          <div class="border border-white/20 rounded-xl p-3"><b>スキル・知識</b><ul class="space-y-1 mt-1 text-sm opacity-90"><li>技術45分/日（Git・Python・LLM・配布・課金）</li><li>知識15分×3（1日1枚→Anki）</li></ul></div>
+          <div class="border border-white/20 rounded-xl p-3"><b>レバレッジ</b><ul class="space-y-1 mt-1 text-sm opacity-90"><li>B：会議要約→β課金</li><li>C：YouTube集中支援ツール</li></ul></div>
         </div>
       </div>
     </section>
 
-    <!-- 週間計画 -->
-    <section class="panel accordion">
-      <div class="head" data-acc="week">
-        <h3>週間計画（固定ルーティン）</h3>
-        <div class="chev" id="chev-week">⌄</div>
+    <!-- 週間計画（タブ） -->
+    <section class="rounded-xl2 border border-white/10 bg-white/60 dark:bg-slate-900/60 shadow-softDark"
+             x-data="tabs('mon')">
+      <div class="px-4 pt-4">
+        <h3 class="font-bold text-lg">週間計画（固定ルーティン）</h3>
+        <div class="mt-3 inline-flex rounded-xl border border-white/20 p-1 bg-white/60 dark:bg-slate-800/60">
+          <button :class="btn('mon')" @click="set('mon')">月〜金</button>
+          <button :class="btn('sat')" @click="set('sat')">土曜</button>
+          <button :class="btn('sun')" @click="set('sun')">日曜</button>
+        </div>
       </div>
-      <div class="body" id="acc-week">
-        <div class="tabs" role="tablist" aria-label="週間タブ">
-          <div class="tab active" data-tab="mon" role="tab" aria-selected="true">月〜金</div>
-          <div class="tab" data-tab="sat" role="tab" aria-selected="false">土曜</div>
-          <div class="tab" data-tab="sun" role="tab" aria-selected="false">日曜</div>
-        </div>
-        <div id="mon" class="tabpane" role="tabpanel">
-          <div class="todo" id="todo-weekday"></div>
-        </div>
-        <div id="sat" class="tabpane hidden" role="tabpanel">
-          <div class="todo" id="todo-sat"></div>
-        </div>
-        <div id="sun" class="tabpane hidden" role="tabpanel">
-          <div class="todo" id="todo-sun"></div>
-        </div>
+      <div class="p-4 pt-3">
+        <template x-if="current==='mon'">
+          <div class="space-y-2" id="todo-weekday"></div>
+        </template>
+        <template x-if="current==='sat'">
+          <div class="space-y-2" id="todo-sat"></div>
+        </template>
+        <template x-if="current==='sun'">
+          <div class="space-y-2" id="todo-sun"></div>
+        </template>
       </div>
     </section>
 
     <!-- トレーニング -->
-    <section class="panel accordion">
-      <div class="head" data-acc="train">
-        <h3>ジム & スプリント（週4＋週2）</h3>
-        <div class="chev" id="chev-train">⌄</div>
-      </div>
-      <div class="body" id="acc-train">
-        <div class="grid-2">
-          <div>
-            <div class="rule"><b>A：下半身重</b><ul class="clean"><li>SQ 6–8×3 / RDL 6–8×3 / ランジ / カーフ</li><li>体幹：ローラー 8–12×3 → 立ちコロ補助</li></ul></div>
-            <div class="rule"><b>B：上半身プレス</b><ul class="clean"><li>BP / ショルダープレス / ディップス</li><li>首アイソ（週2）</li></ul></div>
+    <section class="rounded-xl2 border border-white/10 bg-white/60 dark:bg-slate-900/60 shadow-softDark"
+             x-data="{open:true}">
+      <button class="w-full px-4 py-3 flex items-center justify-between" @click="open=!open">
+        <h3 class="font-bold text-lg">ジム & スプリント（週4＋週2）</h3>
+        <div class="w-7 h-7 grid place-items-center rounded-lg border border-white/20"
+             :class="open ? 'rotate-180' : ''">⌄</div>
+      </button>
+      <div x-show="open" x-collapse>
+        <div class="px-4 pb-4 grid sm:grid-cols-2 gap-3 text-sm">
+          <div class="space-y-3">
+            <div class="border border-white/20 rounded-xl p-3"><b>A：下半身重</b><ul class="list-none space-y-1 mt-1"><li>SQ 6–8×3 / RDL 6–8×3 / ランジ / カーフ</li><li>体幹：ローラー 8–12×3 → 立ちコロ補助</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>B：上半身プレス</b><ul class="space-y-1 mt-1"><li>BP / ショルダープレス / ディップス</li><li>首アイソ（週2）</li></ul></div>
           </div>
-          <div>
-            <div class="rule"><b>C：スプリント補強</b><ul class="clean"><li>プライオ・回旋・臀部＋ロー/懸垂</li></ul></div>
-            <div class="rule"><b>D：下半身中＋腹</b><ul class="clean"><li>片脚系・ヒンジ / ローラー・プランク</li></ul></div>
-            <div class="rule"><b>スプリント</b><ul class="clean"><li>10m/30m/60m × 各3（完全レスト） × 週2</li></ul></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 知識カリキュラム -->
-    <section class="panel accordion">
-      <div class="head" data-acc="know">
-        <h3>知識カリキュラム（毎日15分×3）</h3>
-        <div class="chev" id="chev-know">⌄</div>
-      </div>
-      <div class="body" id="acc-know">
-        <div class="tabs" role="tablist">
-          <div class="tab active" data-tab="hist">歴史/政治/経済</div>
-          <div class="tab" data-tab="sports">スポーツ/車/ファッション</div>
-          <div class="tab" data-tab="life">酒/家とお金/旅行・会話</div>
-        </div>
-        <div id="hist" class="tabpane">
-          <div class="grid-3">
-            <div class="rule"><b>歴史</b><ul class="clean"><li>出来事→因→果→長期影響</li><li>産業革命→都市化→労働法→選挙制度</li></ul></div>
-            <div class="rule"><b>政治・制度</b><ul class="clean"><li>三権分立 / 選挙 / 地方自治</li><li>税・社会保障の流れ</li></ul></div>
-            <div class="rule"><b>経済・投資</b><ul class="clean"><li>金利・インフレ・為替</li><li>指数投資・複利・リバランス / FCF</li></ul></div>
-          </div>
-        </div>
-        <div id="sports" class="tabpane hidden">
-          <div class="grid-3">
-            <div class="rule"><b>スポーツ</b><ul class="clean"><li>大会/名所：花園＝東大阪市花園ラグビー場</li><li>反則・逆転パターンの言語化</li></ul></div>
-            <div class="rule"><b>車</b><ul class="clean"><li>主要メーカー</li><li>ボディ型×価格帯→街で即答練習</li></ul></div>
-            <div class="rule"><b>ファッション</b><ul class="clean"><li>渋クラ：ヘリテージ×ミニマル</li><li>再現コーデ週1 / Pinterest週10ピン</li></ul></div>
-          </div>
-        </div>
-        <div id="life" class="tabpane hidden">
-          <div class="grid-3">
-            <div class="rule"><b>酒</b><ul class="clean"><li>ビール/ウイスキー/日本酒の製法</li><li>代表銘柄×テイスティング語彙10</li></ul></div>
-            <div class="rule"><b>家とお金</b><ul class="clean"><li>固定/変動費の可視化</li><li>口座/クレカ最適化</li></ul></div>
-            <div class="rule"><b>旅行・会話</b><ul class="clean"><li>持ち物テンプレ / 当日動線</li><li>事実→感情→要望 / 要約→感謝</li></ul></div>
+          <div class="space-y-3">
+            <div class="border border-white/20 rounded-xl p-3"><b>C：スプリント補強</b><ul class="space-y-1 mt-1"><li>プライオ・回旋・臀部＋ロー/懸垂</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>D：下半身中＋腹</b><ul class="space-y-1 mt-1"><li>片脚系・ヒンジ / ローラー・プランク</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>スプリント</b><ul class="space-y-1 mt-1"><li>10m/30m/60m × 各3（完全レスト） × 週2</li></ul></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 家事 & 週次 -->
-    <section class="panel accordion">
-      <div class="head" data-acc="life">
-        <h3>家事 & 依存対策 / 週次レビュー</h3>
-        <div class="chev" id="chev-life">⌄</div>
-      </div>
-      <div class="body" id="acc-life">
-        <div class="grid-2">
-          <div class="rule"><b>家事（デフォ毎日）</b><ul class="clean"><li>風呂掃除 / 食器洗い（必須）</li><li>＋ローテ1つ：月ゴミ/火床/水洗濯/木キッチン/金買い出し/土部屋/日作り置き</li></ul></div>
-          <div class="rule"><b>依存対策</b><ul class="clean"><li>スマホ寝室外 / ベッドでスマホ禁止</li><li>SNS/YouTube：昼15分＋夜30分（タイマー）</li><li>置換30秒：水→スクワット10→アプリ終了→机</li></ul></div>
+    <!-- 知識 -->
+    <section class="rounded-xl2 border border-white/10 bg-white/60 dark:bg-slate-900/60 shadow-softDark"
+             x-data="tabs('hist')">
+      <div class="px-4 pt-4">
+        <h3 class="font-bold text-lg">知識カリキュラム（毎日15分×3）</h3>
+        <div class="mt-3 inline-flex rounded-xl border border-white/20 p-1 bg-white/60 dark:bg-slate-800/60">
+          <button :class="btn('hist')" @click="set('hist')">歴史/政治/経済</button>
+          <button :class="btn('sports')" @click="set('sports')">スポーツ/車/ファッション</button>
+          <button :class="btn('life')" @click="set('life')">酒/家とお金/旅行・会話</button>
         </div>
-        <div class="rule" style="margin-top:12px">
-          <b>KPI & 週次レビュー（自動ToDo）</b>
-          <div class="todo" id="todo-weekly"></div>
+      </div>
+      <div class="p-4 pt-3 text-sm">
+        <template x-if="current==='hist'">
+          <div class="grid sm:grid-cols-3 gap-3">
+            <div class="border border-white/20 rounded-xl p-3"><b>歴史</b><ul class="space-y-1 mt-1"><li>出来事→因→果→長期影響</li><li>産業革命→都市化→労働法→選挙制度</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>政治・制度</b><ul class="space-y-1 mt-1"><li>三権分立 / 選挙 / 地方自治</li><li>税・社会保障の流れ</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>経済・投資</b><ul class="space-y-1 mt-1"><li>金利・インフレ・為替</li><li>指数投資・複利・リバランス / FCF</li></ul></div>
+          </div>
+        </template>
+        <template x-if="current==='sports'">
+          <div class="grid sm:grid-cols-3 gap-3">
+            <div class="border border-white/20 rounded-xl p-3"><b>スポーツ</b><ul class="space-y-1 mt-1"><li>花園＝東大阪市花園ラグビー場</li><li>反則・逆転パターンの言語化</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>車</b><ul class="space-y-1 mt-1"><li>主要メーカー</li><li>ボディ型×価格帯→街で即答練習</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>ファッション</b><ul class="space-y-1 mt-1"><li>渋クラ：ヘリテージ×ミニマル</li><li>再現コーデ週1 / Pinterest週10ピン</li></ul></div>
+          </div>
+        </template>
+        <template x-if="current==='life'">
+          <div class="grid sm:grid-cols-3 gap-3">
+            <div class="border border-white/20 rounded-xl p-3"><b>酒</b><ul class="space-y-1 mt-1"><li>ビール/ウイスキー/日本酒の製法</li><li>代表銘柄×テイスティング語彙10</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>家とお金</b><ul class="space-y-1 mt-1"><li>固定/変動費の可視化</li><li>口座/クレカ最適化</li></ul></div>
+            <div class="border border-white/20 rounded-xl p-3"><b>旅行・会話</b><ul class="space-y-1 mt-1"><li>持ち物テンプレ / 当日動線</li><li>事実→感情→要望 / 要約→感謝</li></ul></div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- 生活 & 週次 -->
+    <section class="rounded-xl2 border border-white/10 bg-white/60 dark:bg-slate-900/60 shadow-softDark"
+             x-data="{open:true}">
+      <button class="w-full px-4 py-3 flex items-center justify-between" @click="open=!open">
+        <h3 class="font-bold text-lg">家事 & 依存対策 / 週次レビュー</h3>
+        <div class="w-7 h-7 grid place-items-center rounded-lg border border-white/20"
+             :class="open ? 'rotate-180' : ''">⌄</div>
+      </button>
+      <div x-show="open" x-collapse>
+        <div class="px-4 pb-4 grid sm:grid-cols-2 gap-3 text-sm">
+          <div class="border border-white/20 rounded-xl p-3">
+            <b>家事（デフォ毎日）</b>
+            <ul class="space-y-1 mt-1">
+              <li>風呂掃除 / 食器洗い（必須）</li>
+              <li>＋ローテ1つ：月ゴミ/火床/水洗濯/木キッチン/金買い出し/土部屋/日作り置き</li>
+            </ul>
+          </div>
+          <div class="border border-white/20 rounded-xl p-3">
+            <b>依存対策</b>
+            <ul class="space-y-1 mt-1">
+              <li>スマホ寝室外 / ベッドでスマホ禁止</li>
+              <li>SNS/YouTube：昼15分＋夜30分（タイマー）</li>
+              <li>置換30秒：水→スクワット10→アプリ終了→机</li>
+            </ul>
+          </div>
+          <div class="border border-white/20 rounded-xl p-3 sm:col-span-2">
+            <b>KPI & 週次レビュー（自動ToDo）</b>
+            <div class="mt-2 space-y-2" id="todo-weekly"></div>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
   <!-- Bottom bar -->
-  <div class="bbar">
-    <button class="btn" id="quickGym">🏋️ ジム</button>
-    <button class="btn" id="quickStudy">📚 学習45分</button>
-    <button class="btn" id="quickHouse">🧽 家事達成</button>
-  </div>
-
-  <!-- FAB -->
-  <button class="fab" id="fab">＋</button>
-
-  <!-- Bottom sheet modal -->
-  <div id="modal">
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="KPI編集">
-      <h3>KPI編集 <span style="color:var(--muted); font-size:var(--fs-sm)">保存すると即反映</span></h3>
-      <div class="grid-2" style="gap:12px">
-        <div class="rule">
-          <b>体重</b>
-          <div class="row"><label class="kmuted" style="min-width:96px">現在</label><input id="f_wt" class="input" type="number" step="0.1" inputmode="decimal"></div>
-          <div class="row"><label class="kmuted" style="min-width:96px">目標</label><input id="f_wtTarget" class="input" type="number" step="0.1" inputmode="decimal"></div>
-        </div>
-        <div class="rule">
-          <b>睡眠</b>
-          <div class="row"><label class="kmuted" style="min-width:96px">平均(h)</label><input id="f_sleep" class="input" type="number" step="0.1" inputmode="decimal"></div>
-          <div class="row"><label class="kmuted" style="min-width:96px">下限(h)</label><input id="f_sleepMin" class="input" type="number" step="0.1" inputmode="decimal"></div>
-        </div>
-        <div class="rule">
-          <b>水分</b>
-          <div class="row"><label class="kmuted" style="min-width:96px">現在(L)</label><input id="f_water" class="input" type="number" step="0.1" inputmode="decimal"></div>
-          <div class="row"><label class="kmuted" style="min-width:96px">合宿時(L)</label><input id="f_waterCamp" class="input" type="number" step="0.1" inputmode="decimal"></div>
-        </div>
-        <div class="rule">
-          <b>頻度設定</b>
-          <div class="row"><label class="kmuted" style="min-width:120px">週のジム</label><input id="f_gymPerWeek" class="input" type="number" step="1" inputmode="numeric"></div>
-          <div class="row"><label class="kmuted" style="min-width:120px">スプリント/週</label><input id="f_sprintPerWeek" class="input" type="number" step="1" inputmode="numeric"></div>
+  <nav class="fixed bottom-0 left-0 right-0 z-40 safe-bottom">
+    <div class="mx-auto max-w-screen-md px-4">
+      <div class="rounded-2xl border border-white/10 backdrop-blur-md bg-white/70 dark:bg-slate-900/70 shadow-softDark">
+        <div class="grid grid-cols-3 gap-2 p-2">
+          <button class="h-12 rounded-xl border border-white/20 bg-white/90 dark:bg-slate-800/80 font-bold" @click="toast('ジム、いこう💪（終わったらチェック）')">🏋️ ジム</button>
+          <button class="h-12 rounded-xl border border-white/20 bg-white/90 dark:bg-slate-800/80 font-bold" @click="toast('学習45分、スタート📚')">📚 学習</button>
+          <button class="h-12 rounded-xl border border-white/20 bg-white/90 dark:bg-slate-800/80 font-bold" @click="toast('家事達成、お疲れ！🧽')">🧽 家事</button>
         </div>
       </div>
-      <div class="row" style="justify-content:flex-end; gap:10px; margin-top:12px">
-        <button class="btn iconbtn" id="close">✖</button>
-        <button class="btn" id="save">保存</button>
+    </div>
+  </nav>
+
+  <!-- FAB -->
+  <button class="fixed right-4 bottom-24 z-50 w-14 h-14 rounded-2xl border border-white/20 shadow-softDark text-black font-extrabold text-2xl"
+          style="background: linear-gradient(135deg, #38bdf8, #a78bfa)" @click="openSheet()">＋</button>
+
+  <!-- KPI 編集：ボトムシート -->
+  <div x-show="sheet" x-transition.opacity class="fixed inset-0 z-50 bg-black/40" @click.self="sheet=false">
+    <div x-show="sheet" x-transition
+         class="absolute left-0 right-0 bottom-0 mx-auto w-full max-w-screen-md bg-white dark:bg-slate-900 rounded-t-2xl border border-white/10 shadow-softDark p-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-lg">KPI編集</h3>
+        <button class="h-10 w-10 rounded-xl border border-white/20" @click="sheet=false">✖</button>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-3 mt-3">
+        <div class="border border-white/20 rounded-xl p-3">
+          <b>体重</b>
+          <label class="block text-sm mt-2 opacity-70">現在</label>
+          <input type="number" step="0.1" inputmode="decimal" class="mt-1 h-11 w-full rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3"
+                 :value="kpi.wt" @change="setNum('wt', $event.target.value)">
+          <label class="block text-sm mt-3 opacity-70">目標</label>
+          <input type="number" step="0.1" inputmode="decimal" class="mt-1 h-11 w-full rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3"
+                 :value="kpi.wtTarget" @change="setNum('wtTarget', $event.target.value)">
+        </div>
+        <div class="border border-white/20 rounded-xl p-3">
+          <b>睡眠</b>
+          <label class="block text-sm mt-2 opacity-70">平均(h)</label>
+          <input type="number" step="0.1" inputmode="decimal" class="mt-1 h-11 w-full rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3"
+                 :value="kpi.sleep" @change="setNum('sleep', $event.target.value)">
+          <label class="block text-sm mt-3 opacity-70">下限(h)</label>
+          <input type="number" step="0.1" inputmode="decimal" class="mt-1 h-11 w-full rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3"
+                 :value="kpi.sleepMin" @change="setNum('sleepMin', $event.target.value)">
+        </div>
+        <div class="border border-white/20 rounded-xl p-3">
+          <b>水分</b>
+          <label class="block text-sm mt-2 opacity-70">現在(L)</label>
+          <input type="number" step="0.1" inputmode="decimal" class="mt-1 h-11 w-full rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3"
+                 :value="kpi.water" @change="setNum('water', $event.target.value)">
+          <label class="block text-sm mt-3 opacity-70">合宿(L)</label>
+          <input type="number" step="0.1" inputmode="decimal" class="mt-1 h-11 w-full rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3"
+                 :value="kpi.waterCamp" @change="setNum('waterCamp', $event.target.value)">
+        </div>
+        <div class="border border-white/20 rounded-xl p-3">
+          <b>頻度設定</b>
+          <label class="block text-sm mt-2 opacity-70">週のジム</label>
+          <input type="number" step="1" inputmode="numeric" class="mt-1 h-11 w-full rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3"
+                 :value="kpi.gymPerWeek" @change="setNum('gymPerWeek', $event.target.value)">
+          <label class="block text-sm mt-3 opacity-70">スプリント/週</label>
+          <input type="number" step="1" inputmode="numeric" class="mt-1 h-11 w-full rounded-xl border border-white/20 bg-white/80 dark:bg-slate-800/80 px-3"
+                 :value="kpi.sprintPerWeek" @change="setNum('sprintPerWeek', $event.target.value)">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button class="px-4 h-11 rounded-xl border border-white/20" @click="resetChecks()">チェックのみリセット</button>
+        <button class="px-4 h-11 rounded-xl border border-white/20 bg-accent/80 text-black font-extrabold" @click="sheet=false">保存</button>
       </div>
     </div>
   </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // ===== util =====
-  const $ = (id) => document.getElementById(id);
-  const root = $('root');
-  const THEME_KEY = 'oku_theme';
-  const STATE_KEY = 'oku_kpi_v3';
-
-  // ===== 参照の取得（先に全部） =====
-  const btnTheme = $('theme');
-  const btnReset = $('reset');
-  const btnEdit  = $('edit');
-
-  // KPI表示カード
-  const elWt = $('wt'), elWtTarget = $('wtTarget'), elWtInput = $('wtInput');
-  const elSleep = $('sleep'), elSleepMin = $('sleepMin'), elSlInput = $('slInput');
-  const elWater = $('water'), elWaterCamp = $('waterCamp'), elWaInput = $('waInput');
-
-  const btnWtMinus = $('wtMinus'), btnWtPlus = $('wtPlus');
-  const btnSlMinus = $('slMinus'), btnSlPlus = $('slPlus');
-  const btnWaMinus = $('waMinus'), btnWaPlus = $('waPlus');
-
-  // モーダル（ボトムシート）
-  const modal = $('modal');
-  const btnClose = $('close');
-  const btnSave  = $('save');
-  const f_wt = $('f_wt'), f_wtTarget = $('f_wtTarget');
-  const f_sleep = $('f_sleep'), f_sleepMin = $('f_sleepMin');
-  const f_water = $('f_water'), f_waterCamp = $('f_waterCamp');
-  const f_gymPerWeek = $('f_gymPerWeek'), f_sprintPerWeek = $('f_sprintPerWeek');
-
-  // タブ
-  const tabs = [...document.querySelectorAll('.tab')];
-  const panes = [...document.querySelectorAll('.tabpane')];
-
-  // クイックボタン
-  const quickGym = $('quickGym'), quickStudy = $('quickStudy'), quickHouse = $('quickHouse');
-  const fab = $('fab');
-
-  // ===== テーマ =====
-  function applyTheme(t){ root.className = t; localStorage.setItem(THEME_KEY, t); }
-  applyTheme(localStorage.getItem(THEME_KEY) || 'light');
-  btnTheme.addEventListener('click', () => applyTheme(root.className === 'light' ? '' : 'light'));
-
-  // ===== ステート =====
-  const defaults = { wt:71, wtTarget:77, sleep:7.0, sleepMin:7.0, water:2.5, waterCamp:3.0, gymPerWeek:4, sprintPerWeek:2 };
-  const state = Object.assign({}, defaults, JSON.parse(localStorage.getItem(STATE_KEY) || '{}'));
-  function save(){ localStorage.setItem(STATE_KEY, JSON.stringify(state)); render(); }
-  function n1(x){ return Number(x).toFixed(1).replace(/\.0$/,''); }
-
-  // ===== チェックリスト（共通） =====
-  function bindChecklist(container,key,items){
-    const el = $(container);
-    const s = JSON.parse(localStorage.getItem(key)||'{}');
-    el.innerHTML = '';
-    items.forEach((t,i)=>{
-      const id = key+'_'+i;
-      const wrap = document.createElement('div'); wrap.className='item';
-      const cb = document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.checked=!!s[id];
-      cb.addEventListener('change',()=>{ s[id]=cb.checked; localStorage.setItem(key,JSON.stringify(s)); });
-      const lab = document.createElement('label'); lab.className='label'; lab.setAttribute('for',id); lab.innerText=t;
-      wrap.appendChild(cb); wrap.appendChild(lab); el.appendChild(wrap);
-    });
-  }
-  function weeklyItems(){
-    return [
-      'KPI入力：体重・睡眠平均・水分・スプリントTT',
-      '副業：B改善×2 / Cリリース×1',
-      '知識：1日1枚×7→金土クイズ10問',
-      '家事：デフォ毎日＋ローテ達成80%+',
-      '依存対策：○×カレンダー更新',
-      '次週の3タスク決定（最大3つ）'
-    ];
-  }
-  function bindWeekly(){ bindChecklist('todo-weekly','chk_weekly', weeklyItems()); }
-
-  // ===== レンダー（要素参照後なら安全） =====
-  function render(){
-    // KPI表示
-    elWt.textContent      = n1(state.wt);
-    elWtTarget.textContent= Number(state.wtTarget).toFixed(0);
-    elSleep.textContent   = Number(state.sleep).toFixed(1);
-    elSleepMin.textContent= Number(state.sleepMin).toFixed(1);
-    elWater.textContent   = Number(state.water).toFixed(1);
-    elWaterCamp.textContent= Number(state.waterCamp).toFixed(1);
-
-    // KPI入力欄
-    elWtInput.value = state.wt;
-    elSlInput.value = state.sleep;
-    elWaInput.value = state.water;
-
-    // モーダルフォーム
-    f_wt.value = state.wt; f_wtTarget.value = state.wtTarget;
-    f_sleep.value = state.sleep; f_sleepMin.value = state.sleepMin;
-    f_water.value = state.water; f_waterCamp.value = state.waterCamp;
-    f_gymPerWeek.value = state.gymPerWeek; f_sprintPerWeek.value = state.sprintPerWeek;
-
-    // 週間（平日）チェック
-    bindChecklist('todo-weekday','chk_weekday',[
-      '06:30 起床→水→日光→知識ノート15分',
-      '出勤前：荷物チェック（PC/ボトル/プロテイン）',
-      '12:30 散歩10分＋SNS 15分まで',
-      '帰宅後：風呂掃除＋食器洗い（必須）',
-      `ジム or スプリント（週${state.gymPerWeek}/${state.sprintPerWeek}）`,
-      '風呂→栄養→学習45分（技術/知識）',
-      '23:00 ストレッチ / スマホ別室充電→23:30就寝（7h）'
-    ]);
-
-    // 週次レビュー
-    bindWeekly();
-  }
-
-  // ===== KPIカード：±と直接入力 =====
-  function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
-  btnWtMinus.addEventListener('click', ()=>{ state.wt = clamp(+state.wt-0.1, 40,150); save(); });
-  btnWtPlus .addEventListener('click', ()=>{ state.wt = clamp(+state.wt+0.1, 40,150); save(); });
-  elWtInput.addEventListener('change', ()=>{ state.wt = clamp(parseFloat(elWtInput.value||state.wt), 40,150); save(); });
-
-  btnSlMinus.addEventListener('click', ()=>{ state.sleep = clamp(+state.sleep-0.1, 0,16); save(); });
-  btnSlPlus .addEventListener('click', ()=>{ state.sleep = clamp(+state.sleep+0.1, 0,16); save(); });
-  elSlInput.addEventListener('change', ()=>{ state.sleep = clamp(parseFloat(elSlInput.value||state.sleep), 0,16); save(); });
-
-  btnWaMinus.addEventListener('click', ()=>{ state.water = clamp(+state.water-0.1, 0,10); save(); });
-  btnWaPlus .addEventListener('click', ()=>{ state.water = clamp(+state.water+0.1, 0,10); save(); });
-  elWaInput.addEventListener('change', ()=>{ state.water = clamp(parseFloat(elWaInput.value||state.water), 0,10); save(); });
-
-  // ===== モーダル =====
-  const openSheet  = () => { modal.style.display = 'block'; };
-  const closeSheet = () => { modal.style.display = 'none'; };
-  btnEdit.addEventListener('click', openSheet);
-  btnClose.addEventListener('click', closeSheet);
-  modal.addEventListener('click', (e)=>{ if(e.target===modal) closeSheet(); });
-  btnSave.addEventListener('click', ()=>{
-    state.wt = +f_wt.value || state.wt;
-    state.wtTarget = +f_wtTarget.value || state.wtTarget;
-    state.sleep = +f_sleep.value || state.sleep;
-    state.sleepMin = +f_sleepMin.value || state.sleepMin;
-    state.water = +f_water.value || state.water;
-    state.waterCamp = +f_waterCamp.value || state.waterCamp;
-    state.gymPerWeek = +f_gymPerWeek.value || state.gymPerWeek;
-    state.sprintPerWeek = +f_sprintPerWeek.value || state.sprintPerWeek;
-    save(); closeSheet();
-  });
-
-  // ===== アコーディオン =====
-  document.querySelectorAll('.accordion .head').forEach(head=>{
-    head.addEventListener('click', ()=>{
-      const id = head.dataset.acc;
-      const body = $('acc-'+id);
-      const chev = $('chev-'+id);
-      const open = body.style.display !== 'none';
-      body.style.display = open ? 'none' : 'block';
-      chev.classList.toggle('rotate', !open);
-    });
-  });
-  ['road','pillars','week','train','know','life'].forEach(id=> $('acc-'+id).style.display='block');
-
-  // ===== タブ + スワイプ =====
-  function activateTab(id){
-    tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===id));
-    panes.forEach(p=>p.classList.toggle('hidden', p.id!==id));
-  }
-  tabs.forEach(tab=> tab.addEventListener('click',()=> activateTab(tab.dataset.tab)));
-
-  function enableSwipeOn(id){
-    const el = $(id);
-    let x0=null;
-    el.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; },{passive:true});
-    el.addEventListener('touchmove',e=>{
-      if(x0==null) return;
-      const dx=e.touches[0].clientX-x0;
-      if(Math.abs(dx)>60){
-        const order=['mon','sat','sun'];
-        const cur = order.findIndex(pid=> !$(pid).classList.contains('hidden'));
-        const next = dx<0 ? Math.min(cur+1,order.length-1) : Math.max(cur-1,0);
-        activateTab(order[next]);
-        x0=null;
+  <!-- JS（Alpineコンポーネント） -->
+  <script>
+    function tabs(initial){
+      return {
+        current: initial,
+        set(id){ this.current = id },
+        btn(id){
+          return [
+            'px-4 h-10 rounded-lg font-semibold',
+            'border',
+            this.current===id ? 'bg-accent/20 border-accent text-slate-900 dark:text-slate-100' : 'bg-transparent border-white/20 text-slate-600 dark:text-slate-300'
+          ].join(' ')
+        }
       }
-    },{passive:true});
-  }
-  ['mon','sat','sun'].forEach(enableSwipeOn);
-
-  // ===== チェックリスト初期化（空→renderで上書き） =====
-  bindChecklist('todo-weekday','chk_weekday',[]);
-  bindChecklist('todo-sat','chk_sat',[
-    '10:00–12:00 ラグビー（〜13:00の場合あり）',
-    '補給：糖＋WPI / ストレッチ',
-    '補強（下半身/体幹）',
-    '部屋リセット60分',
-    '作り置き1品'
-  ]);
-  bindChecklist('todo-sun','chk_sun',[
-    '回復：軽い有酸素 or モビリティ',
-    '週次レビュー20分（KPI・予定更新）',
-    'デート/家族の時間',
-    '作り置き2品'
-  ]);
-  bindWeekly();
-
-  // ===== ボトムバー & FAB =====
-  quickGym.addEventListener('click', ()=> alert('ジム行ってらっしゃい💪（終わったらチェック）'));
-  quickStudy.addEventListener('click', ()=> alert('学習45分スタート📚'));
-  quickHouse.addEventListener('click', ()=> alert('家事達成お疲れ！🧽'));
-  fab.addEventListener('click', openSheet);
-
-  // ===== リセット =====
-  btnReset.addEventListener('click', ()=>{
-    if(confirm('全チェックと設定を初期化しますか？')){
-      const theme = localStorage.getItem(THEME_KEY);
-      localStorage.clear();
-      if(theme) localStorage.setItem(THEME_KEY, theme);
-      location.reload();
     }
-  });
 
-  // ===== 最初の描画 =====
-  render();
-});
-</script>
+    function app(){
+      return {
+        // ---- 状態（保存） ----
+        dark: Alpine.$persist(window.matchMedia('(prefers-color-scheme: dark)').matches).as('oku_theme_dark'),
+        sheet: false,
+        kpi: Alpine.$persist({
+          wt: 71, wtTarget: 77,
+          sleep: 7.0, sleepMin: 7.0,
+          water: 2.5, waterCamp: 3.0,
+          gymPerWeek: 4, sprintPerWeek: 2
+        }).as('oku_kpi_v4'),
 
+        init(){
+          // チェックリスト初期化
+          this.bindChecklist('todo-weekday','chk_weekday',[
+            '06:30 起床→水→日光→知識ノート15分',
+            '出勤前：荷物チェック（PC/ボトル/プロテイン）',
+            '12:30 散歩10分＋SNS 15分まで',
+            '帰宅後：風呂掃除＋食器洗い（必須）',
+            `ジム or スプリント（週${this.kpi.gymPerWeek}/${this.kpi.sprintPerWeek}）`,
+            '風呂→栄養→学習45分（技術/知識）',
+            '23:00 ストレッチ / スマホ別室充電→23:30就寝（7h）'
+          ]);
+          this.bindChecklist('todo-sat','chk_sat',[
+            '10:00–12:00 ラグビー（〜13:00の場合あり）',
+            '補給：糖＋WPI / ストレッチ',
+            '補強（下半身/体幹）',
+            '部屋リセット60分',
+            '作り置き1品'
+          ]);
+          this.bindChecklist('todo-sun','chk_sun',[
+            '回復：軽い有酸素 or モビリティ',
+            '週次レビュー20分（KPI・予定更新）',
+            'デート/家族の時間',
+            '作り置き2品'
+          ]);
+          this.bindChecklist('todo-weekly','chk_weekly', this.weeklyItems());
+        },
+
+        // ---- 見た目・操作 ----
+        toggleDark(){ this.dark = !this.dark },
+        openSheet(){ this.sheet = true },
+        toast(msg){ alert(msg) },
+
+        // ---- KPI操作 ----
+        fmt1(x){ return Number(x).toFixed(1).replace(/\.0$/,'') },
+        setNum(key, val){
+          const v = parseFloat(val);
+          if(!isNaN(v)){ this.kpi[key] = v }
+          // 平日の文言を最新頻度に差し替え
+          this.bindChecklist('todo-weekday','chk_weekday',[
+            '06:30 起床→水→日光→知識ノート15分',
+            '出勤前：荷物チェック（PC/ボトル/プロテイン）',
+            '12:30 散歩10分＋SNS 15分まで',
+            '帰宅後：風呂掃除＋食器洗い（必須）',
+            `ジム or スプリント（週${this.kpi.gymPerWeek}/${this.kpi.sprintPerWeek}）`,
+            '風呂→栄養→学習45分（技術/知識）',
+            '23:00 ストレッチ / スマホ別室充電→23:30就寝（7h）'
+          ]);
+        },
+        adj(key, delta){
+          const clamp = (n,min,max)=> Math.max(min, Math.min(max,n));
+          const map = {
+            wt: [40,150], sleep:[0,16], water:[0,10]
+          };
+          const [mn,mx] = map[key];
+          this.kpi[key] = clamp((+this.kpi[key] + delta), mn, mx);
+        },
+
+        // ---- チェックリスト ----
+        weeklyItems(){
+          return [
+            'KPI入力：体重・睡眠平均・水分・スプリントTT',
+            '副業：B改善×2 / Cリリース×1',
+            '知識：1日1枚×7→金土クイズ10問',
+            '家事：デフォ毎日＋ローテ達成80%+',
+            '依存対策：○×カレンダー更新',
+            '次週の3タスク決定（最大3つ）'
+          ]
+        },
+        bindChecklist(container,key,items){
+          const box = document.getElementById(container);
+          const state = JSON.parse(localStorage.getItem(key)||'{}');
+          box.innerHTML='';
+          items.forEach((t,i)=>{
+            const id = `${key}_${i}`;
+            const wrap = document.createElement('label');
+            wrap.className = "flex items-start gap-3 border border-white/20 rounded-xl p-3 bg-white/60 dark:bg-slate-900/60";
+            const cb = document.createElement('input');
+            cb.type='checkbox';
+            cb.checked=!!state[id];
+            cb.className="mt-1 h-5 w-5 accent-cyan-400";
+            cb.addEventListener('change',()=>{ state[id]=cb.checked; localStorage.setItem(key, JSON.stringify(state)); });
+            const span = document.createElement('span'); span.textContent = t; span.className="flex-1";
+            wrap.appendChild(cb); wrap.appendChild(span); box.appendChild(wrap);
+          });
+        },
+        resetChecks(){
+          ['chk_weekday','chk_sat','chk_sun','chk_weekly'].forEach(k=> localStorage.removeItem(k));
+          this.bindChecklist('todo-weekly','chk_weekly', this.weeklyItems());
+          this.toast('チェック状態をリセットしました');
+        }
+      }
+    }
+  </script>
 </body>
 </html>
